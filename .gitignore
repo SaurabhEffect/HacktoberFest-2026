@@ -19,6 +19,7 @@ env/
 data/uploads/
 data/private/
 .github/copilot-instructions.md
+reports/
 
 # Build and model artifacts
 build/

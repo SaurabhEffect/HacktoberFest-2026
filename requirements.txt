@@ -1,3 +1,6 @@
-numpy==2.4.3
-pandas==2.2.2
+matplotlib==3.11.2
+numpy==2.4.6
+pandas==3.0.6
 pytest==9.1.1
+scikit-learn==1.9.1
+tabpfn==9.1.0

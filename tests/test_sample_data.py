@@ -49,13 +49,17 @@ def test_income_reconciles_and_balances_are_cumulative() -> None:
 
 
 def test_anomaly_labels_point_to_valid_transactions() -> None:
-    transactions, invoices, ground_truth = generate_sample_data(as_of=pd.Timestamp("2026-10-03"))
+    transactions, invoices, ground_truth = generate_sample_data(
+        as_of=pd.Timestamp("2026-10-03")
+    )
     assert 5 <= len(ground_truth) <= 8
     assert ground_truth["transaction_index"].between(0, len(transactions) - 1).all()
     assert set(ground_truth["anomaly_type"]) >= {
-        "duplicate_charge", "subscription_price_jump", "unusually_large_one_off"
+        "duplicate_charge",
+        "subscription_price_jump",
+        "unusually_large_one_off",
     }
-    assert (invoices["client"].nunique() == 3)
+    assert invoices["client"].nunique() == 3
 
 
 def test_history_spans_at_least_thirty_months() -> None:

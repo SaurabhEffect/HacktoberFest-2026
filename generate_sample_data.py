@@ -45,7 +45,6 @@ def generate_sample_data(
     invoice_cutoff = end_date - pd.Timedelta(days=45)
     invoice_start = history_start + pd.Timedelta(days=4)
     invoices: list[dict[str, object]] = []
-    transactions: list[dict[str, object]] = []
     anomaly_records: list[dict[str, object]] = []
     income_transactions: list[dict[str, object]] = []
     invoice_months = pd.date_range(
@@ -81,7 +80,9 @@ def generate_sample_data(
                 paid_date = pd.NaT
             invoice_id = f"INV-{invoice_number}"
             invoice_number += 1
-            project_type = str(rng.choice(["Design", "Consulting", "Development", "Retainer"]))
+            project_type = str(
+                rng.choice(["Design", "Consulting", "Development", "Retainer"])
+            )
             invoices.append(
                 {
                     "invoice_id": invoice_id,
@@ -147,7 +148,10 @@ def generate_sample_data(
         history_start.replace(day=1), end_date.replace(day=1), freq="MS"
     )
     software_jump_month = months[int(len(months) * 0.58)]
-    duplicate_months = {months[int(len(months) * 0.28)], months[int(len(months) * 0.76)]}
+    duplicate_months = {
+        months[int(len(months) * 0.28)],
+        months[int(len(months) * 0.76)],
+    }
     for month in months:
         rent_day = min(1, (month + pd.offsets.MonthEnd(0)).day)
         add_expense(
@@ -199,11 +203,15 @@ def generate_sample_data(
             duplicate_date = month + pd.Timedelta(days=22)
             duplicate_amount = float(rng.uniform(45, 125))
             merchant = str(
-                rng.choice(
-                    ["METRO MARKET #184", "RIVER FUEL 0291", "OFFICE DEPOT 441"]
-                )
+                rng.choice(["METRO MARKET #184", "RIVER FUEL 0291", "OFFICE DEPOT 441"])
             )
-            add_expense(duplicate_date, f"POS DEBIT {merchant} TERM 09", duplicate_amount, "Supplies", merchant)
+            add_expense(
+                duplicate_date,
+                f"POS DEBIT {merchant} TERM 09",
+                duplicate_amount,
+                "Supplies",
+                merchant,
+            )
             add_expense(
                 duplicate_date + pd.Timedelta(hours=2),
                 f"POS DEBIT {merchant} TERM 09",
@@ -269,8 +277,12 @@ def generate_sample_data(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--seed", type=int, default=42, help="Random seed (default: 42)")
-    parser.add_argument("--output-dir", type=Path, default=Path(__file__).parent / "data")
+    parser.add_argument(
+        "--seed", type=int, default=42, help="Random seed (default: 42)"
+    )
+    parser.add_argument(
+        "--output-dir", type=Path, default=Path(__file__).parent / "data"
+    )
     args = parser.parse_args()
 
     transactions, invoices, ground_truth = generate_sample_data(seed=args.seed)
@@ -281,7 +293,11 @@ def main() -> None:
     monthly_income = transactions.loc[transactions["amount"] > 0].copy()
     monthly_income["month"] = pd.to_datetime(monthly_income["date"]).dt.to_period("M")
     monthly_totals = monthly_income.groupby("month")["amount"].sum()
-    volatility = monthly_totals.std(ddof=0) / monthly_totals.mean() if len(monthly_totals) else 0.0
+    volatility = (
+        monthly_totals.std(ddof=0) / monthly_totals.mean()
+        if len(monthly_totals)
+        else 0.0
+    )
     print(
         f"Generated {len(transactions):,} transactions and {len(invoices):,} invoices; "
         f"income volatility (monthly CV): {volatility:.2f}; "
