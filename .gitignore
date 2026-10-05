@@ -18,7 +18,7 @@ env/
 .streamlit/secrets.toml
 data/uploads/
 data/private/
-.github/copilot-instructions.md
+.github/Docs
 reports/
 
 # Build and model artifacts

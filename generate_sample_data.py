@@ -27,6 +27,10 @@ INVOICE_COLUMNS = [
     "project_type",
 ]
 GROUND_TRUTH_COLUMNS = ["transaction_index", "label", "anomaly_type"]
+DEFAULT_AS_OF = pd.Timestamp("2026-10-03")
+DEFAULT_BUFFER_AMOUNT = 3000.0
+OPENING_BALANCE = 16850.0
+INCOME_SCALE = 0.68
 
 CLIENTS = {
     "Northstar Studio": {"payment": "on_time", "low": 1400, "high": 3200},
@@ -36,11 +40,11 @@ CLIENTS = {
 
 
 def generate_sample_data(
-    seed: int = 42, as_of: pd.Timestamp | None = None
+    seed: int = 42, as_of: pd.Timestamp | str | None = None
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Return seeded transactions, invoices, and evaluation-only anomaly labels."""
     rng = np.random.default_rng(seed)
-    end_date = pd.Timestamp(as_of or pd.Timestamp.today()).normalize()
+    end_date = pd.Timestamp(DEFAULT_AS_OF if as_of is None else as_of).normalize()
     history_start = end_date - pd.DateOffset(months=33)
     invoice_cutoff = end_date - pd.Timedelta(days=45)
     invoice_start = history_start + pd.Timedelta(days=4)
@@ -63,7 +67,7 @@ def generate_sample_data(
                 continue
             typical_amount = float(rng.uniform(behavior["low"], behavior["high"]))
             seasonal_factor = float(rng.uniform(0.55, 0.82)) if slow_season else 1.0
-            amount = round(typical_amount * seasonal_factor, 2)
+            amount = round(typical_amount * seasonal_factor * INCOME_SCALE, 2)
             due_date = issue_date + pd.Timedelta(days=30)
             payment_behavior = behavior["payment"]
             paid_date: pd.Timestamp | pd.NaT
@@ -181,6 +185,30 @@ def generate_sample_data(
             "North Cellular",
             True,
         )
+        add_expense(
+            month + pd.Timedelta(days=2),
+            "ONLINE TRANSFER TO PERSONAL CHECKING OWNER DRAW",
+            1200,
+            "Owner Draw",
+            "Owner Transfer",
+            True,
+        )
+        add_expense(
+            month + pd.Timedelta(days=14),
+            "CITY UTILITIES AUTOPAY WEB PMT",
+            200,
+            "Living",
+            "City Utilities",
+            True,
+        )
+        add_expense(
+            month + pd.Timedelta(days=23),
+            "TRANSIT PASS AUTO RELOAD METRO",
+            150,
+            "Living",
+            "Metro Transit",
+            True,
+        )
         if month.month in (3, 6, 9, 12):
             tax_date = month + pd.Timedelta(days=19)
             add_expense(
@@ -220,6 +248,15 @@ def generate_sample_data(
                 merchant,
                 anomaly_type="duplicate_charge",
             )
+    first_grocery_date = history_start.replace(day=1) + pd.Timedelta(days=2)
+    for grocery_date in pd.date_range(first_grocery_date, end_date, freq="7D"):
+        add_expense(
+            grocery_date,
+            "POS DEBIT NEIGHBORHOOD MARKET GROCERY",
+            150,
+            "Living",
+            "Neighborhood Market",
+        )
     equipment_month = months[int(len(months) * 0.43)]
     equipment_date = equipment_month + pd.Timedelta(days=16)
     add_expense(
@@ -243,8 +280,7 @@ def generate_sample_data(
     all_transactions.sort(
         key=lambda item: (pd.Timestamp(item["date"]), str(item["description"]))
     )
-    opening_balance = 8200.0
-    running_balance = opening_balance
+    running_balance = OPENING_BALANCE
     anomaly_by_identity = {id(record["_row"]): record for record in anomaly_records}
     ground_truth: list[dict[str, object]] = []
     for index, transaction in enumerate(all_transactions):
@@ -283,13 +319,29 @@ def main() -> None:
     parser.add_argument(
         "--output-dir", type=Path, default=Path(__file__).parent / "data"
     )
+    parser.add_argument(
+        "--as-of",
+        type=pd.Timestamp,
+        default=DEFAULT_AS_OF,
+        help=f"Latest date in the generated history (default: {DEFAULT_AS_OF.date()})",
+    )
     args = parser.parse_args()
 
-    transactions, invoices, ground_truth = generate_sample_data(seed=args.seed)
+    transactions, invoices, ground_truth = generate_sample_data(
+        seed=args.seed, as_of=args.as_of
+    )
     args.output_dir.mkdir(parents=True, exist_ok=True)
     transactions.to_csv(args.output_dir / "transactions.csv", index=False)
     invoices.to_csv(args.output_dir / "invoices.csv", index=False)
     ground_truth.to_csv(args.output_dir / "anomaly_ground_truth.csv", index=False)
+    from features import build_weekly_feature_tables
+
+    training, _ = build_weekly_feature_tables(
+        transactions, invoices, buffer_amount=DEFAULT_BUFFER_AMOUNT
+    )
+    below_buffer = transactions["balance_after"] < DEFAULT_BUFFER_AMOUNT
+    dip_episodes = int((below_buffer & ~below_buffer.shift(fill_value=False)).sum())
+    dip_rate = float(training["balance_below_buffer_within_30d"].mean())
     monthly_income = transactions.loc[transactions["amount"] > 0].copy()
     monthly_income["month"] = pd.to_datetime(monthly_income["date"]).dt.to_period("M")
     monthly_totals = monthly_income.groupby("month")["amount"].sum()
@@ -302,6 +354,20 @@ def main() -> None:
         f"Generated {len(transactions):,} transactions and {len(invoices):,} invoices; "
         f"income volatility (monthly CV): {volatility:.2f}; "
         f"labeled anomalies: {len(ground_truth)}."
+    )
+    print(
+        f"Balance min/max: ${transactions['balance_after'].min():,.2f} / "
+        f"${transactions['balance_after'].max():,.2f}."
+    )
+    print(
+        f"Dip episodes below ${DEFAULT_BUFFER_AMOUNT:,.0f}: {dip_episodes}; "
+        f"training dip-label rate: {dip_rate:.1%}."
+    )
+    print(
+        "Rows per file: "
+        f"transactions.csv={len(transactions):,}, "
+        f"invoices.csv={len(invoices):,}, "
+        f"anomaly_ground_truth.csv={len(ground_truth):,}."
     )
 
 

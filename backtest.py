@@ -20,7 +20,12 @@ from tabpfn.errors import TabPFNError
 
 from features import TARGET_COLUMNS, build_weekly_feature_tables
 from ingestion import load_and_validate_csvs
-from model import get_tabpfn_model, predict_regression_with_interval
+from model import (
+    constant_class_predictions,
+    fit_and_predict,
+    get_tabpfn_model,
+    positive_class_probabilities,
+)
 from sample_data import load_sample_data
 
 REGRESSION_TARGET = TARGET_COLUMNS[0]
@@ -87,21 +92,6 @@ def _feature_columns(data: pd.DataFrame) -> list[str]:
             "Weekly model features must be numeric: " + ", ".join(non_numeric)
         )
     return columns
-
-
-def _constant_class_predictions(
-    target: pd.Series, size: int
-) -> tuple[np.ndarray, np.ndarray]:
-    label = int(target.iloc[0])
-    return np.full(size, label, dtype=int), np.full(size, float(label), dtype=float)
-
-
-def _positive_probabilities(estimator: Any, features: pd.DataFrame) -> np.ndarray:
-    probabilities = estimator.predict_proba(features)
-    classes = list(estimator.classes_)
-    return (
-        probabilities[:, classes.index(1)] if 1 in classes else np.zeros(len(features))
-    )
 
 
 def _summary(regression: pd.DataFrame, classification: pd.DataFrame) -> str:
@@ -221,10 +211,13 @@ def run_rolling_origin_backtest(
         test_x = test[feature_columns]
         train_y_regression = train[REGRESSION_TARGET].astype(float)
         test_y_regression = test[REGRESSION_TARGET].astype(float).to_numpy()
-        tabpfn_regressor = get_model("regression", device)
-        tabpfn_regressor.fit(train_x, train_y_regression)
-        tabpfn_mean, tabpfn_lower, tabpfn_upper = predict_regression_with_interval(
-            tabpfn_regressor, test_x
+        tabpfn_mean, tabpfn_lower, tabpfn_upper = fit_and_predict(
+            "regression",
+            train_x,
+            train_y_regression,
+            test_x,
+            device=device,
+            model_factory=get_model,
         )
         trailing_weekly_net = (
             test_x["mean_income_4w"] - test_x["mean_expenses_4w"]
@@ -286,17 +279,20 @@ def run_rolling_origin_backtest(
 
         if train_y_class.nunique() < 2:
             tabpfn_class_predictions, tabpfn_class_probabilities = (
-                _constant_class_predictions(train_y_class, len(test))
+                constant_class_predictions(train_y_class, len(test))
             )
         else:
-            tabpfn_classifier = get_model("classification", device)
-            tabpfn_classifier.fit(train_x, train_y_class)
-            tabpfn_class_probabilities = _positive_probabilities(
-                tabpfn_classifier, test_x
+            (tabpfn_class_probabilities,) = fit_and_predict(
+                "classification",
+                train_x,
+                train_y_class,
+                test_x,
+                device=device,
+                model_factory=get_model,
             )
             tabpfn_class_predictions = (tabpfn_class_probabilities >= 0.5).astype(int)
         if train_y_class.nunique() < 2:
-            gradient_class_predictions, _ = _constant_class_predictions(
+            gradient_class_predictions, _ = constant_class_predictions(
                 train_y_class, len(test)
             )
         else:
@@ -304,7 +300,7 @@ def run_rolling_origin_backtest(
                 max_iter=100, max_leaf_nodes=15, random_state=0
             )
             gradient_classifier.fit(train_x, train_y_class)
-            gradient_probabilities = _positive_probabilities(
+            gradient_probabilities = positive_class_probabilities(
                 gradient_classifier, test_x
             )
             gradient_class_predictions = (gradient_probabilities >= 0.5).astype(int)

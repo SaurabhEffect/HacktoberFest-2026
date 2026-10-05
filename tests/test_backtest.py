@@ -7,6 +7,7 @@ from features import build_weekly_feature_tables
 from ingestion import load_and_validate_csvs
 from model import (
     clear_tabpfn_model_cache,
+    fit_and_predict,
     get_tabpfn_model,
     predict_regression_with_interval,
 )
@@ -107,11 +108,15 @@ def test_tabpfn_models_are_cached_by_task_and_device() -> None:
 def test_regression_wrapper_returns_mean_and_requested_interval() -> None:
     class QuantileModel:
         def predict(self, features, output_type, quantiles=None):
-            if output_type == "mean":
-                return np.array([10.0, 20.0])
-            assert output_type == "quantiles"
+            assert output_type == "main"
             assert quantiles == [0.1, 0.9]
-            return [np.array([2.0, 12.0]), np.array([18.0, 28.0])]
+            return {
+                "mean": np.array([10.0, 20.0]),
+                "quantiles": [
+                    np.array([2.0, 12.0]),
+                    np.array([18.0, 28.0]),
+                ],
+            }
 
     mean, lower, upper = predict_regression_with_interval(
         QuantileModel(), pd.DataFrame({"feature": [1.0, 2.0]})
@@ -119,3 +124,59 @@ def test_regression_wrapper_returns_mean_and_requested_interval() -> None:
     np.testing.assert_array_equal(mean, [10.0, 20.0])
     np.testing.assert_array_equal(lower, [2.0, 12.0])
     np.testing.assert_array_equal(upper, [18.0, 28.0])
+
+
+def test_regression_wrapper_uses_a_single_main_prediction_call() -> None:
+    class OneCallModel:
+        calls = 0
+
+        def predict(self, features, output_type, quantiles):
+            self.calls += 1
+            assert output_type == "main"
+            return {
+                "mean": np.array([3.0]),
+                "quantiles": [np.array([1.0]), np.array([5.0])],
+            }
+
+    model = OneCallModel()
+    predict_regression_with_interval(model, pd.DataFrame({"x": [1]}))
+    assert model.calls == 1
+
+
+def test_fit_and_predict_holds_the_shared_lock(monkeypatch) -> None:
+    from importlib import import_module
+
+    model_module = import_module("model")
+    events: list[str] = []
+
+    class RecordingLock:
+        def __enter__(self):
+            events.append("lock-enter")
+
+        def __exit__(self, exc_type, exc, traceback):
+            events.append("lock-exit")
+
+    class Estimator:
+        def fit(self, features, target):
+            events.append("fit")
+            self.value = float(target.mean())
+            return self
+
+        def predict(self, features, output_type, quantiles=None):
+            events.append("predict")
+            values = np.full(len(features), self.value)
+            return {
+                "mean": values,
+                "quantiles": [values - 1, values + 1],
+            }
+
+    monkeypatch.setattr(model_module, "TABPFN_MODEL_LOCK", RecordingLock())
+    predictions = fit_and_predict(
+        "regression",
+        pd.DataFrame({"feature": [1.0]}),
+        pd.Series([2.0]),
+        pd.DataFrame({"feature": [2.0]}),
+        model_factory=lambda task, device: Estimator(),
+    )
+    assert events == ["lock-enter", "fit", "predict", "lock-exit"]
+    assert predictions[0].tolist() == [2.0]

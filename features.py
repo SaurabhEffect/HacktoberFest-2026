@@ -40,7 +40,9 @@ FEATURE_DESCRIPTIONS = {
     "week_of_year": "ISO week number for week_end.",
     "month": "Calendar month number for week_end.",
     "weeks_to_month_end": "Days from week_end to that month's last day, expressed in weeks.",
-    "known_obligation_next_7d": "1 when a previously observed recurring expense schedule falls in the next seven days.",
+    "known_obligation_next_7d": "1 when a quarterly or annual expense is expected in the next seven days based only on history.",
+    "expected_committed_outflow_next_28d": "Median amount of all observed periodic expenses expected in the next 28 days.",
+    "expected_lumpy_outflow_next_28d": "Median amount of quarterly and annual expenses expected in the next 28 days.",
     "current_balance": "Balance after all transactions dated on or before week_end.",
     "runway_weeks_at_current_burn": "Current nonnegative balance divided by positive four-week average net burn; missing when burn is not positive.",
 }
@@ -51,32 +53,160 @@ def _week_end(dates: pd.Series) -> pd.Series:
     return (dates + pd.to_timedelta(days_until_sunday, unit="D")).dt.normalize()
 
 
+def infer_periodic_expenses(
+    transactions: pd.DataFrame, as_of: pd.Timestamp
+) -> pd.DataFrame:
+    """Infer known expense cadence, typical amount, and next date from prior records."""
+    known = transactions.loc[
+        (transactions["date"] <= as_of) & (transactions["amount"] < 0)
+    ]
+    cadence_options = (
+        ("weekly", 7, 1, 0),
+        ("monthly", 30, 4, 1),
+        ("quarterly", 91, 8, 3),
+        ("annual", 365, 15, 12),
+    )
+    records: list[dict[str, object]] = []
+    for counterparty, group in known.groupby("counterparty", dropna=True):
+        dated = group.sort_values("date")
+        dates = dated["date"].drop_duplicates()
+        intervals = dates.diff().dropna().dt.days.to_numpy(dtype=float)
+        if len(dates) < 2:
+            continue
+        median_interval = float(np.median(intervals))
+        if not np.all(np.abs(intervals - median_interval) <= 8):
+            continue
+        cadence = next(
+            (
+                (name, months)
+                for name, days, tolerance, months in cadence_options
+                if abs(median_interval - days) <= tolerance
+            ),
+            None,
+        )
+        if cadence is None:
+            continue
+        cadence_name, months = cadence
+        last_date = dates.iloc[-1]
+        if cadence_name == "weekly":
+            next_date = last_date + pd.Timedelta(days=7)
+        else:
+            next_date = last_date + pd.DateOffset(months=months)
+        records.append(
+            {
+                "counterparty": counterparty,
+                "cadence": cadence_name,
+                "expected_amount": float(-dated["amount"].median()),
+                "next_expected_date": pd.Timestamp(next_date),
+                "transaction_indices": tuple(group.index),
+            }
+        )
+    return pd.DataFrame(
+        records,
+        columns=[
+            "counterparty",
+            "cadence",
+            "expected_amount",
+            "next_expected_date",
+            "transaction_indices",
+        ],
+    )
+
+
+def periodic_expense_indices(transactions: pd.DataFrame) -> pd.Index:
+    """Return indices of expenses with a supported periodic cadence."""
+    if transactions.empty:
+        return pd.Index([])
+    schedules = infer_periodic_expenses(transactions, transactions["date"].max())
+    indices = {
+        index
+        for row in schedules.itertuples(index=False)
+        for index in row.transaction_indices
+    }
+    return pd.Index(list(indices))
+
+
+def _obligations_for_week(
+    transactions: pd.DataFrame, week_end: pd.Timestamp
+) -> tuple[int, float, float]:
+    schedules = infer_periodic_expenses(transactions, week_end)
+    if schedules.empty:
+        return 0, 0.0, 0.0
+    next_7d = schedules.loc[
+        (schedules["next_expected_date"] > week_end)
+        & (schedules["next_expected_date"] <= week_end + pd.Timedelta(days=7))
+        & schedules["cadence"].isin(["quarterly", "annual"])
+    ]
+    next_28d = schedules.loc[
+        (schedules["next_expected_date"] > week_end)
+        & (schedules["next_expected_date"] <= week_end + pd.Timedelta(days=28))
+    ]
+    lumpy = next_28d.loc[next_28d["cadence"].isin(["quarterly", "annual"])]
+    return (
+        int(not next_7d.empty),
+        float(next_28d["expected_amount"].sum()),
+        float(lumpy["expected_amount"].sum()),
+    )
+
+
+def _obligations_by_week(
+    transactions: pd.DataFrame, week_ends: pd.DatetimeIndex
+) -> list[tuple[int, float, float]]:
+    """Precompute cadence-based obligation signals for every feature cutoff."""
+    cadence_options = (
+        ("weekly", 7, 1, 1),
+        ("monthly", 30, 4, 1),
+        ("quarterly", 91, 8, 3),
+        ("annual", 365, 15, 12),
+    )
+    result = [[0, 0.0, 0.0] for _ in week_ends]
+    expenses = transactions.loc[transactions["amount"] < 0]
+    for _, group in expenses.groupby("counterparty", dropna=True):
+        daily = group.groupby("date", as_index=False, sort=True)["amount"].median()
+        dates = daily["date"].to_numpy(dtype="datetime64[ns]")
+        amounts = daily["amount"].to_numpy(dtype=float)
+        for index, week_end in enumerate(week_ends):
+            count = int(np.searchsorted(dates, week_end.to_datetime64(), side="right"))
+            if count < 2:
+                continue
+            history_dates = dates[:count]
+            intervals = np.diff(history_dates).astype("timedelta64[D]").astype(float)
+            median_interval = float(np.median(intervals))
+            if not np.all(np.abs(intervals - median_interval) <= 8):
+                continue
+            cadence = next(
+                (
+                    (name, months)
+                    for name, days, tolerance, months in cadence_options
+                    if abs(median_interval - days) <= tolerance
+                ),
+                None,
+            )
+            if cadence is None:
+                continue
+            cadence_name, months = cadence
+            last_date = pd.Timestamp(history_dates[-1])
+            next_date = (
+                last_date + pd.Timedelta(days=7)
+                if cadence_name == "weekly"
+                else last_date + pd.DateOffset(months=months)
+            )
+            if next_date <= week_end or next_date > week_end + pd.Timedelta(days=28):
+                continue
+            amount = float(-np.median(amounts[:count]))
+            result[index][1] += amount
+            if cadence_name in ("quarterly", "annual"):
+                result[index][2] += amount
+                if next_date <= week_end + pd.Timedelta(days=7):
+                    result[index][0] = 1
+    return [(flag, committed, lumpy) for flag, committed, lumpy in result]
+
+
 def _known_obligation_in_next_week(
     transactions: pd.DataFrame, week_end: pd.Timestamp
 ) -> int:
-    recurring = transactions.loc[
-        (transactions["date"] <= week_end)
-        & (transactions["amount"] < 0)
-        & transactions["is_recurring"]
-    ]
-    expected_days: list[int] = []
-    for _, group in recurring.groupby("counterparty", dropna=True):
-        days = group["date"].dt.day
-        if len(days) >= 2:
-            expected_days.append(int(days.mode().iloc[0]))
-
-    window_end = week_end + pd.Timedelta(days=7)
-    month_starts = {
-        week_end.replace(day=1),
-        window_end.replace(day=1),
-    }
-    for month_start in month_starts:
-        month_last_day = (month_start + pd.offsets.MonthEnd(0)).day
-        for expected_day in expected_days:
-            due_date = month_start.replace(day=min(expected_day, month_last_day))
-            if week_end < due_date <= window_end:
-                return 1
-    return 0
+    """Retain the original helper name for callers while using lumpy obligations."""
+    return _obligations_for_week(transactions, week_end)[0]
 
 
 def _invoice_features(
@@ -108,12 +238,11 @@ def _invoice_features(
     return outstanding, past_due, expected_income
 
 
-def build_weekly_feature_tables(
+def build_weekly_feature_core(
     transactions: pd.DataFrame,
     invoices: pd.DataFrame,
-    buffer_amount: float = 0.0,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Return target-complete training weeks and target-incomplete inference weeks."""
+    """Build buffer-independent weekly features and regression targets."""
     required_transaction_columns = {
         "date",
         "amount",
@@ -136,9 +265,6 @@ def build_weekly_feature_tables(
         raise ValueError(
             "Provide cleaned data with the required transaction and invoice columns."
         )
-    if not np.isfinite(buffer_amount):
-        raise ValueError("buffer_amount must be a finite number.")
-
     transactions = transactions.copy()
     invoices = invoices.copy()
     transactions["date"] = pd.to_datetime(transactions["date"]).dt.normalize()
@@ -194,8 +320,9 @@ def build_weekly_feature_tables(
             weekly["income"].rolling(window, min_periods=1).std(ddof=0)
         )
 
+    obligation_features = _obligations_by_week(transactions, week_ends)
     rows: list[dict[str, object]] = []
-    for week_end in week_ends:
+    for week_index, week_end in enumerate(week_ends):
         row: dict[str, object] = {"week_end": week_end}
         for lag in LAG_WEEKS:
             lagged_flow = current_net_flow.shift(lag).loc[week_end]
@@ -240,9 +367,11 @@ def build_weekly_feature_tables(
         row["month"] = int(week_end.month)
         month_end = week_end + pd.offsets.MonthEnd(0)
         row["weeks_to_month_end"] = (month_end - week_end).days / 7.0
-        row["known_obligation_next_7d"] = _known_obligation_in_next_week(
-            transactions, week_end
-        )
+        (
+            row["known_obligation_next_7d"],
+            row["expected_committed_outflow_next_28d"],
+            row["expected_lumpy_outflow_next_28d"],
+        ) = obligation_features[week_index]
         balance = float(current_balance.loc[week_end])
         row["current_balance"] = balance
         current_burn = float(rolling["mean_expenses_4w"].loc[week_end]) - float(
@@ -260,15 +389,8 @@ def build_weekly_feature_tables(
                 (transactions["date"] > week_end)
                 & (transactions["date"] <= week_end + pd.Timedelta(days=28))
             ]
-            future_dip = transactions.loc[
-                (transactions["date"] > week_end)
-                & (transactions["date"] <= target_end)
-                & (transactions["balance_after"] < buffer_amount)
-            ]
             row["next_4w_net_cash_flow"] = float(future["amount"].sum())
-            row["balance_below_buffer_within_30d"] = int(
-                balance < buffer_amount or not future_dip.empty
-            )
+            row["balance_below_buffer_within_30d"] = pd.NA
         else:
             row["next_4w_net_cash_flow"] = np.nan
             row["balance_below_buffer_within_30d"] = pd.NA
@@ -277,7 +399,58 @@ def build_weekly_feature_tables(
     result["balance_below_buffer_within_30d"] = pd.array(
         result["balance_below_buffer_within_30d"], dtype="Int64"
     )
-    target_complete = result[TARGET_COLUMNS].notna().all(axis=1)
+    target_complete = result["next_4w_net_cash_flow"].notna()
     training = result.loc[target_complete].reset_index(drop=True)
     inference = result.loc[~target_complete].reset_index(drop=True)
+    return training, inference
+
+
+def compute_dip_labels(
+    transactions: pd.DataFrame, weekly_features: pd.DataFrame, buffer_amount: float
+) -> pd.Series:
+    """Compute buffer-dependent 30-day labels from a prebuilt balance path."""
+    if not np.isfinite(buffer_amount):
+        raise ValueError("buffer_amount must be a finite number.")
+    if "week_end" not in weekly_features or "current_balance" not in weekly_features:
+        raise ValueError("Weekly features must contain week_end and current_balance.")
+    if transactions.empty:
+        return pd.Series(pd.array([], dtype="Int64"), index=weekly_features.index)
+
+    ordered = transactions.sort_values("date")
+    transaction_dates = pd.to_datetime(ordered["date"]).to_numpy(dtype="datetime64[ns]")
+    below_buffer = (
+        pd.to_numeric(ordered["balance_after"], errors="coerce").to_numpy()
+        < buffer_amount
+    )
+    prefix_count = np.concatenate(([0], np.cumsum(below_buffer, dtype=np.int64)))
+    week_ends = pd.to_datetime(weekly_features["week_end"]).to_numpy(
+        dtype="datetime64[ns]"
+    )
+    start = np.searchsorted(transaction_dates, week_ends, side="right")
+    end = np.searchsorted(
+        transaction_dates, week_ends + np.timedelta64(30, "D"), side="right"
+    )
+    below_now = (
+        pd.to_numeric(weekly_features["current_balance"], errors="coerce").to_numpy()
+        < buffer_amount
+    )
+    labels = below_now | ((prefix_count[end] - prefix_count[start]) > 0)
+    return pd.Series(
+        pd.array(labels.astype(int), dtype="Int64"), index=weekly_features.index
+    )
+
+
+def build_weekly_feature_tables(
+    transactions: pd.DataFrame,
+    invoices: pd.DataFrame,
+    buffer_amount: float = 0.0,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Return training and inference weeks with labels for the requested buffer."""
+    training, inference = build_weekly_feature_core(transactions, invoices)
+    training["balance_below_buffer_within_30d"] = compute_dip_labels(
+        transactions, training, buffer_amount
+    )
+    inference["balance_below_buffer_within_30d"] = pd.array(
+        [pd.NA] * len(inference), dtype="Int64"
+    )
     return training, inference

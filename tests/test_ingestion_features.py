@@ -2,7 +2,12 @@ from io import StringIO
 
 import pandas as pd
 
-from features import FEATURE_DESCRIPTIONS, TARGET_COLUMNS, build_weekly_feature_tables
+from features import (
+    FEATURE_DESCRIPTIONS,
+    TARGET_COLUMNS,
+    _known_obligation_in_next_week,
+    build_weekly_feature_tables,
+)
 from ingestion import load_and_validate_csvs
 
 TRANSACTIONS_CSV = """date,description,amount,category,counterparty,is_recurring,balance_after
@@ -117,3 +122,68 @@ def test_features_for_week_ignore_all_later_records() -> None:
         baseline[feature_columns], changed[feature_columns], check_names=False
     )
     assert baseline["next_4w_net_cash_flow"] != changed["next_4w_net_cash_flow"]
+
+
+def test_periodic_obligations_use_only_history_available_at_week_end() -> None:
+    periodic_history = pd.DataFrame(
+        [
+            ("2024-03-20", -800, "IRS EFTPS"),
+            ("2024-06-20", -900, "IRS EFTPS"),
+            ("2024-09-20", -850, "IRS EFTPS"),
+            ("2022-02-15", -1100, "Pioneer Mutual"),
+            ("2023-02-15", -1150, "Pioneer Mutual"),
+            ("2024-02-15", -1200, "Pioneer Mutual"),
+        ],
+        columns=["date", "amount", "counterparty"],
+    )
+    periodic_history["date"] = pd.to_datetime(periodic_history["date"])
+    periodic_history["is_recurring"] = False
+
+    assert (
+        _known_obligation_in_next_week(periodic_history, pd.Timestamp("2024-12-15"))
+        == 1
+    )
+    assert (
+        _known_obligation_in_next_week(periodic_history, pd.Timestamp("2025-02-09"))
+        == 1
+    )
+
+    transactions, invoices = _clean_sample()
+    cutoff = pd.Timestamp("2024-01-07")
+    baseline_training, baseline_inference = build_weekly_feature_tables(
+        transactions, invoices
+    )
+    baseline = (
+        pd.concat([baseline_training, baseline_inference], ignore_index=True)
+        .loc[lambda rows: rows["week_end"] == cutoff]
+        .iloc[0]
+    )
+
+    future_periodic = pd.DataFrame(
+        [
+            ("2024-01-10", -90),
+            ("2024-04-10", -95),
+            ("2024-07-10", -100),
+        ],
+        columns=["date", "amount"],
+    )
+    future_periodic["date"] = pd.to_datetime(future_periodic["date"])
+    future_periodic["description"] = "FUTURE QUARTERLY TAX PAYMENT"
+    future_periodic["category"] = "Taxes"
+    future_periodic["counterparty"] = "Future Tax Agency"
+    future_periodic["is_recurring"] = False
+    future_periodic["balance_after"] = 0.0
+    augmented = pd.concat([transactions, future_periodic], ignore_index=True)
+    augmented = augmented.sort_values(["date", "description"]).reset_index(drop=True)
+    augmented["balance_after"] = 1000 + augmented["amount"].cumsum()
+    changed_training, changed_inference = build_weekly_feature_tables(
+        augmented, invoices
+    )
+    changed = (
+        pd.concat([changed_training, changed_inference], ignore_index=True)
+        .loc[lambda rows: rows["week_end"] == cutoff]
+        .iloc[0]
+    )
+
+    assert baseline["known_obligation_next_7d"] == 0
+    assert changed["known_obligation_next_7d"] == baseline["known_obligation_next_7d"]

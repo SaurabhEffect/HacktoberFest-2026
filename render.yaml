@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: nofumble
+    runtime: python
+    plan: standard
+    buildCommand: python -m pip install -r requirements.txt
+    startCommand: >-
+      python -m streamlit run app.py
+      --server.address 0.0.0.0
+      --server.port $PORT
+      --server.headless true
+    healthCheckPath: /_stcore/health
+    disk:
+      name: tabpfn-model-cache
+      mountPath: /var/data
+      sizeGB: 5
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: TABPFN_TOKEN
+        sync: false
+      - key: TABPFN_NO_BROWSER
+        value: "true"
+      - key: TABPFN_MODEL_CACHE_DIR
+        value: /var/data/tabpfn
+      - key: NOFUMBLE_WARM_MODEL
+        value: "true"
