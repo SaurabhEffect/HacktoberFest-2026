@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>This Week Outside</title>
+  <meta name="description" content="A printable one-page field guide of what's showing up near you this week. Built on open data and a local open-weight model.">
+  <meta name="theme-color" content="#3d5f58">
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <defs>
+      <symbol id="st-leaf" viewBox="0 0 120 120">
+        <path d="M60 8C97 30 106 72 60 112 14 72 23 30 60 8Z" fill="#fff4dc" stroke="#fff4dc" stroke-width="14" stroke-linejoin="round"/>
+        <path d="M60 8C97 30 106 72 60 112 14 72 23 30 60 8Z" fill="#ff7a30" stroke="#14231f" stroke-width="4.5" stroke-linejoin="round"/>
+        <path d="M60 24v84M60 52 44 40M60 52 76 40M60 74 40 60M60 74 80 60" fill="none" stroke="#14231f" stroke-width="4" stroke-linecap="round"/>
+      </symbol>
+      <symbol id="st-mushroom" viewBox="0 0 120 120">
+        <path d="M14 66C14 32 38 12 60 12s46 20 46 54Z M44 66h32v34a16 16 0 0 1-32 0Z" fill="#fff4dc" stroke="#fff4dc" stroke-width="14" stroke-linejoin="round"/>
+        <rect x="44" y="60" width="32" height="42" rx="15" fill="#fff4dc" stroke="#14231f" stroke-width="4.5"/>
+        <path d="M14 66C14 32 38 12 60 12s46 20 46 54Z" fill="#ff5a4a" stroke="#14231f" stroke-width="4.5" stroke-linejoin="round"/>
+        <circle cx="42" cy="44" r="7" fill="#fff4dc"/><circle cx="68" cy="32" r="6" fill="#fff4dc"/><circle cx="82" cy="52" r="7" fill="#fff4dc"/>
+      </symbol>
+      <symbol id="st-bird" viewBox="0 0 120 120">
+        <g fill="#fff4dc" stroke="#fff4dc" stroke-width="14" stroke-linejoin="round">
+          <ellipse cx="54" cy="68" rx="36" ry="28"/><circle cx="86" cy="44" r="19"/><path d="M14 66 2 54l4 28Z"/>
+        </g>
+        <path d="M30 94v14M48 96v12" stroke="#14231f" stroke-width="4.5" stroke-linecap="round"/>
+        <path d="M18 62 4 50l4 30Z" fill="#6fb7d6" stroke="#14231f" stroke-width="4.5" stroke-linejoin="round"/>
+        <ellipse cx="54" cy="68" rx="36" ry="28" fill="#8fd0ea" stroke="#14231f" stroke-width="4.5"/>
+        <path d="M30 70c10 14 36 14 50-2" fill="#fff4dc" stroke="none"/>
+        <circle cx="86" cy="44" r="19" fill="#8fd0ea" stroke="#14231f" stroke-width="4.5"/>
+        <path d="M102 38l14 7-14 7Z" fill="#ffc83d" stroke="#14231f" stroke-width="4" stroke-linejoin="round"/>
+        <circle cx="90" cy="41" r="3.6" fill="#14231f"/>
+        <path d="M34 62c8-10 26-12 36-4" fill="none" stroke="#14231f" stroke-width="4" stroke-linecap="round"/>
+      </symbol>
+      <symbol id="st-sun" viewBox="0 0 120 120">
+        <circle cx="60" cy="60" r="50" fill="#fff4dc"/>
+        <g stroke="#14231f" stroke-width="5" stroke-linecap="round">
+          <path d="M60 8v14M60 98v14M8 60h14M98 60h14M23 23l10 10M87 87l10 10M97 23 87 33M33 87 23 97"/>
+        </g>
+        <circle cx="60" cy="60" r="27" fill="#ffd04a" stroke="#14231f" stroke-width="4.5"/>
+        <path d="M49 58q4-5 8 0M65 58q4-5 8 0M50 68q10 9 20 0" fill="none" stroke="#14231f" stroke-width="3.5" stroke-linecap="round"/>
+      </symbol>
+      <symbol id="st-acorn" viewBox="0 0 120 120">
+        <path d="M60 112C34 100 26 74 28 54h64c2 20-6 46-32 58Z" fill="#fff4dc" stroke="#fff4dc" stroke-width="14" stroke-linejoin="round"/>
+        <path d="M60 112C34 100 26 74 28 54h64c2 20-6 46-32 58Z" fill="#d99a52" stroke="#14231f" stroke-width="4.5" stroke-linejoin="round"/>
+        <path d="M18 56c0-24 20-38 42-38s42 14 42 38Z" fill="#8a5a2b" stroke="#14231f" stroke-width="4.5" stroke-linejoin="round"/>
+        <path d="M60 18V6" stroke="#14231f" stroke-width="5" stroke-linecap="round"/>
+        <path d="M34 36l12 8M52 28l12 8M70 28l12 8M82 40l8 8" stroke="#14231f" stroke-width="3" stroke-linecap="round" opacity=".5"/>
+      </symbol>
+      <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 22s7-6.3 7-12a7 7 0 1 0-14 0c0 5.7 7 12 7 12Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><circle cx="12" cy="10" r="2.6" fill="currentColor"/></symbol>
+      <symbol id="i-print" viewBox="0 0 24 24"><path d="M7 9V3h10v6M7 17H4v-7h16v7h-3M7 14h10v7H7Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/></symbol>
+      <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8" fill="none" stroke="currentColor" stroke-width="2.2"/></symbol>
+    </defs>
+  </svg>
+
+  <header class="site no-print">
+    <a class="brand" href="/" aria-label="This Week Outside — home">
+      <svg class="brand-mark" aria-hidden="true"><use href="#st-leaf"/></svg>
+      <span>This Week <em>Outside</em></span>
+    </a>
+    <nav class="site-nav" aria-label="Sections">
+      <a href="#how">How it works</a>
+      <a href="#open">Why open</a>
+      <span class="pill pill-ai" id="ai-status" role="status">checking AI…</span>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero no-print">
+      <div class="hero-copy">
+        <p class="eyebrow"><span>Hacktoberfest 2026</span> Touch Grass week</p>
+        <h1>Something wild is <em>near you.</em></h1>
+        <p class="lede">
+          Find out what your neighbours have spotted in the last two weeks, then print it as a
+          one-page field card and go look. A small AI that runs on <strong>your own machine</strong>
+          writes the words. The screen is the shortest part.
+        </p>
+
+        <form id="form" class="finder" autocomplete="off">
+          <label class="finder-box">
+            <span class="sr-only">Where are you?</span>
+            <input id="place" name="place" type="text" placeholder="Find your patch by town, city or park" maxlength="100">
+            <button type="submit" class="btn btn-primary" id="btn-go">Find</button>
+          </label>
+          <div class="finder-links">
+            <button type="button" id="btn-locate" class="link-btn"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> Use my location</button>
+            <span aria-hidden="true">·</span>
+            <button type="button" id="btn-demo" class="link-btn">Try with sample data</button>
+          </div>
+          <details class="opts">
+            <summary>Options</summary>
+            <div class="opts-grid">
+              <label class="field">
+                <span class="label">Search radius</span>
+                <select id="radius">
+                  <option value="5">5 km</option>
+                  <option value="10" selected>10 km</option>
+                  <option value="25">25 km</option>
+                  <option value="50">50 km</option>
+                </select>
+              </label>
+              <label class="field">
+                <span class="label">Look back</span>
+                <select id="days">
+                  <option value="7">1 week</option>
+                  <option value="14" selected>2 weeks</option>
+                  <option value="30">1 month</option>
+                </select>
+              </label>
+              <label class="check">
+                <input type="checkbox" id="opt-llm" checked>
+                <span>Write with local AI</span>
+              </label>
+            </div>
+          </details>
+          <div id="alts" class="alts" hidden></div>
+        </form>
+
+        <div id="loading" class="loading" role="status" aria-live="polite" hidden>
+          <span class="spinner" aria-hidden="true"></span>
+          <span id="loading-text">Working…</span>
+        </div>
+        <div id="notice" class="notice" role="alert" hidden></div>
+      </div>
+
+      <div class="hero-art" aria-hidden="true">
+        <svg class="sticker s1"><use href="#st-leaf"/></svg>
+        <svg class="sticker s2"><use href="#st-bird"/></svg>
+        <svg class="sticker s3"><use href="#st-mushroom"/></svg>
+        <svg class="sticker s4"><use href="#st-sun"/></svg>
+        <svg class="sticker s5"><use href="#st-acorn"/></svg>
+      </div>
+    </section>
+
+    <section id="result" class="result" hidden>
+      <div class="toolbar no-print">
+        <button type="button" id="btn-print" class="btn btn-primary"><svg class="ico" aria-hidden="true"><use href="#i-print"/></svg> Print card</button>
+        <button type="button" id="btn-copy" class="btn"><svg class="ico" aria-hidden="true"><use href="#i-copy"/></svg> Copy as text</button>
+        <div class="seg" role="group" aria-label="Temperature units">
+          <button type="button" data-unit="c" aria-pressed="true">°C</button>
+          <button type="button" data-unit="f" aria-pressed="false">°F</button>
+        </div>
+        <label class="check">
+          <input type="checkbox" id="opt-photos" checked>
+          <span>Larger photos on printed card</span>
+        </label>
+      </div>
+      <article id="card" class="card" aria-label="Your field card"></article>
+    </section>
+
+    <noscript>
+      <p class="notice" style="display:block;margin:2rem auto;max-width:40rem">This app needs JavaScript to build your field card.</p>
+    </noscript>
+
+    <section id="how" class="section no-print">
+      <div class="wrap">
+        <h2 class="section-title">How it <em>works</em></h2>
+        <ol class="steps">
+          <li class="step">
+            <span class="step-n">01</span>
+            <h3>Pick your patch</h3>
+            <p>Type a town or share your location. Coordinates are rounded to about 1&nbsp;km before they leave your computer.</p>
+          </li>
+          <li class="step">
+            <span class="step-n">02</span>
+            <h3>Read the neighbourhood</h3>
+            <p>We pull recent iNaturalist sightings and the 7-day forecast, and flag what has <em>just showed up</em>. Your local model writes the tips.</p>
+          </li>
+          <li class="step">
+            <span class="step-n">03</span>
+            <h3>Print it. Go.</h3>
+            <p>One page, ink-friendly, with tick boxes. Leave the phone at home and tick things off as you spot them.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section id="open" class="section section-dark no-print">
+      <div class="wrap">
+        <h2 class="section-title">Open on <em>purpose</em></h2>
+        <ul class="why">
+          <li><svg class="why-art"><use href="#st-acorn"/></svg><h3>Private by default</h3><p>The model runs on your laptop. Nothing about you is stored on a server.</p></li>
+          <li><svg class="why-art"><use href="#st-sun"/></svg><h3>Free forever</h3><p>Open data and an open-weight model: no API key, no bill, no tier to outgrow.</p></li>
+          <li><svg class="why-art"><use href="#st-mushroom"/></svg><h3>Swap the model</h3><p>One environment variable changes the model or the server (Ollama, llama.cpp, LM Studio, vLLM).</p></li>
+          <li><svg class="why-art"><use href="#st-bird"/></svg><h3>Works on the trail</h3><p>Once it is printed, the trail needs no signal at all.</p></li>
+        </ul>
+        <p class="built-with">
+          <span>Built with</span>
+          <b>iNaturalist</b><b>Open-Meteo</b><b>Ollama</b><b>Flask</b><b>Vanilla JS</b>
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site no-print">
+    <p>
+      Sightings from <a href="https://www.inaturalist.org" target="_blank" rel="noopener noreferrer">iNaturalist</a> observers ·
+      Forecast and place search by <a href="https://open-meteo.com" target="_blank" rel="noopener noreferrer">Open-Meteo</a> ·
+      Words by an open-weight model running on your machine.
+    </p>
+    <p class="muted">Not affiliated with Hacktoberfest, DigitalOcean or DEV; a community entry inspired by its look. Nothing you type is stored on a server.</p>
+  </footer>
+
+  <div id="toast" class="toast no-print" role="status" aria-live="polite" hidden></div>
+
+  <script src="/static/app.js" defer></script>
+</body>
+</html>

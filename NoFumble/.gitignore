@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Local secrets and user data
+.env
+.env.*
+!.env.example
+.streamlit/secrets.toml
+data/uploads/
+data/private/
+.github/Docs
+reports/
+
+# Build and model artifacts
+build/
+dist/
+*.egg-info/
+*.ckpt
+*.pt
+*.pth
+*.onnx
+.cache/
+
+# Editor and operating-system files
+.vscode/*
+!.vscode/settings.json
+.idea/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,6 @@
+transaction_index,label,anomaly_type
+130,anomaly,duplicate_charge
+195,anomaly,unusually_large_one_off
+258,anomaly,subscription_price_jump
+345,anomaly,duplicate_charge
+401,anomaly,unusually_large_one_off
