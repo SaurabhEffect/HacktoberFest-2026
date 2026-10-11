@@ -24,16 +24,20 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version-file: .python-version
+          python-version-file: NoFumble/.python-version
           cache: pip
           cache-dependency-path: |
-            requirements.txt
-            requirements-dev.txt
+            NoFumble/requirements.txt
+            NoFumble/requirements-dev.txt
       - name: Install dependencies
         run: python -m pip install -r requirements-dev.txt
+        working-directory: NoFumble
       - name: Check formatting
         run: python -m ruff format --check .
+        working-directory: NoFumble
       - name: Lint
         run: python -m ruff check .
+        working-directory: NoFumble
       - name: Test
         run: python -m pytest
+        working-directory: NoFumble
