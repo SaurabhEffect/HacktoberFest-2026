@@ -1,0 +1,50 @@
+name: Hinglish Reel Captioner
+
+on:
+  push:
+    paths:
+      - "hinglish-reel-captioner/**"
+      - ".github/workflows/hinglish-reel-captioner.yml"
+  pull_request:
+    paths:
+      - "hinglish-reel-captioner/**"
+      - ".github/workflows/hinglish-reel-captioner.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: hinglish-reel-captioner/requirements-dev.txt
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes ffmpeg
+      - name: Install dependencies
+        run: python -m pip install -r requirements-dev.txt
+        working-directory: hinglish-reel-captioner
+      - name: Lint
+        run: python -m ruff check .
+        working-directory: hinglish-reel-captioner
+      - name: Test
+        run: python -m pytest -q
+        working-directory: hinglish-reel-captioner

@@ -9,3 +9,5 @@ its own top-level folder.
   expense checks.
 - [This Week Outside](./this-week-outside/README.md) - a hyperlocal field guide
   for things to look for outdoors this week.
+- [Hinglish Reel Captioner](./hinglish-reel-captioner/README.md) - local Roman
+  Hinglish captions for reels and voice notes.

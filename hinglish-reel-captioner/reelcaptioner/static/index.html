@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hinglish Reel Captioner</title>
+  <meta name="description" content="Local, open-weight captions for Hindi, English and Hinglish videos. Roman-script, word-by-word, burned in on your own machine.">
+  <meta name="theme-color" content="#3d5f58">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect x='3' y='3' width='42' height='42' rx='12' fill='%23ff8a2b' stroke='%23142824' stroke-width='3'/%3E%3Cpath d='M12 14h24a3 3 0 0 1 3 3v11a3 3 0 0 1-3 3H25l-6 6v-6h-7a3 3 0 0 1-3-3V17a3 3 0 0 1 3-3z' fill='%23f7f2e6' stroke='%23142824' stroke-width='2.5' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/static/app.css">
+  <link rel="stylesheet" href="/static/studio.css">
+  <link rel="preload" href="/static/fonts/Poppins-Bold.ttf" as="font" type="font/ttf" crossorigin>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="#/" id="brandLink">
+      <svg viewBox="0 0 48 48" aria-hidden="true"><rect x="3" y="3" width="42" height="42" rx="12" fill="#ff8a2b" stroke="#142824" stroke-width="3"/><path d="M12 14h24a3 3 0 0 1 3 3v11a3 3 0 0 1-3 3H25l-6 6v-6h-7a3 3 0 0 1-3-3V17a3 3 0 0 1 3-3z" fill="#f7f2e6" stroke="#142824" stroke-width="2.5" stroke-linejoin="round"/><path d="M16 21h10M16 26h16" stroke="#142824" stroke-width="2.8" stroke-linecap="round"/></svg>
+      <span>Hinglish Reel Captioner<small>open models · your laptop · no bills</small></span>
+    </a>
+    <nav class="nav" aria-label="Main">
+      <a href="#how">How it works</a>
+      <a href="#why">Why open</a>
+      <span class="pill" id="statusPill" title="Where the speech model runs"><i></i><span class="pill-text"><span id="statusText">Checking…</span><span id="statusExtra" class="extra"></span></span></span>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <div id="home">
+    <section class="hero">
+      <div class="wrap hero-grid">
+        <div>
+          <p class="eyebrow">Open-weight AI · runs on your laptop</p>
+          <h1>Reels in Hinglish.<em>Captioned offline.</em></h1>
+          <p class="lede">Drop a video and get big, bold, word-by-word captions in Roman Hinglish, in your brand colours. Nothing is uploaded to anyone's server, and there is no per-minute bill.</p>
+
+          <form class="dropzone" id="uploadForm" autocomplete="off">
+            <label class="drop-target" id="dropTarget" for="fileInput">
+              <svg viewBox="0 0 48 48" aria-hidden="true"><rect x="5" y="9" width="38" height="30" rx="8" fill="#ffd36b" stroke="#142824" stroke-width="3"/><path d="M20 18l11 6-11 6z" fill="#ff8a2b" stroke="#142824" stroke-width="2.5" stroke-linejoin="round"/></svg>
+              <strong id="dropTitle">Drop a video or voice note</strong>
+              <span id="dropSub">or click to choose · MP4, MOV, WebM, MP3, WAV, M4A…</span>
+            </label>
+            <input class="sr-only" type="file" id="fileInput" accept="video/*,audio/*,.mp4,.mov,.m4v,.webm,.mkv,.avi,.mp3,.wav,.m4a,.aac,.ogg,.flac,.opus">
+
+            <details class="options" id="options">
+              <summary>Options</summary>
+              <div class="opt-grid">
+                <label class="field">Language
+                  <select id="optLanguage"></select>
+                </label>
+                <label class="field">Speech model
+                  <select id="optModel"></select>
+                  <small id="modelNote">✓ already on this computer · ↓ downloads once, then works offline</small>
+                </label>
+                <label class="field full">Names and terms in this video
+                  <input type="text" id="optHints" maxlength="400" placeholder="e.g. Saru, Zomato, Bhindi Bazaar">
+                  <small>Brands, people and product names. Helps the model spell them right.</small>
+                </label>
+                <label class="field full">My words
+                  <textarea id="optWords" spellcheck="false" placeholder="doston=dosto&#10;insta gram=Instagram&#10;रील्स=reels"></textarea>
+                  <small>One rule per line: the captions' wording left of the <code>=</code>, yours on the right. Several words are fine. Saved in this browser only.</small>
+                </label>
+                <label class="field full">Custom model (optional)
+                  <input type="text" id="optCustom" placeholder="Folder path or Hugging Face repo">
+                  <small>Have a Hindi fine-tune in CTranslate2 format? Point to it here instead of picking from the list.</small>
+                </label>
+                <label class="check full" id="polishRow">
+                  <input type="checkbox" id="optPolish" disabled>
+                  <span>Polish spelling with a local LLM <small id="polishNote">Ollama was not detected on this computer.</small></span>
+                </label>
+                <label class="field">If the file is audio only
+                  <select id="optCanvas"><option value="vertical">Vertical 9:16</option><option value="square">Square 1:1</option><option value="landscape">Landscape 16:9</option></select>
+                </label>
+              </div>
+            </details>
+
+            <p class="notice error" id="uploadError" role="alert" hidden></p>
+            <div class="dz-actions">
+              <button class="btn primary" type="submit" id="goBtn" disabled>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                Make my captions
+              </button>
+              <span class="grow" id="goHint">Pick a file to begin.</span>
+            </div>
+          </form>
+        </div>
+
+        <div class="hero-art" aria-hidden="true">
+          <svg viewBox="0 0 420 520" role="img">
+            <rect x="96" y="22" width="238" height="470" rx="38" fill="#17302b" stroke="#142824" stroke-width="5"/>
+            <rect x="109" y="36" width="212" height="442" rx="28" fill="#2c504a"/>
+            <circle cx="262" cy="130" r="38" fill="#ffd36b" stroke="#142824" stroke-width="4"/>
+            <path d="M109 330 C 150 250, 200 250, 240 310 S 300 330, 321 290 V450 a28 28 0 0 1 -28 28 H137 a28 28 0 0 1 -28 -28z" fill="#3d5f58" stroke="#142824" stroke-width="4"/>
+            <path d="M109 400 C 160 350, 220 380, 321 360 V450 a28 28 0 0 1 -28 28 H137 a28 28 0 0 1 -28 -28z" fill="#9fbfb3" stroke="#142824" stroke-width="4"/>
+            <g font-family="RC Poppins, sans-serif" font-weight="700" font-size="25" text-anchor="middle" stroke="#17302b" stroke-width="7" paint-order="stroke fill" stroke-linejoin="round">
+              <text x="215" y="362" fill="#fff">Aaj hum</text>
+              <text x="215" y="394"><tspan fill="#ff8a2b">baat</tspan><tspan fill="#fff"> karenge</tspan></text>
+            </g>
+            <rect x="170" y="30" width="90" height="12" rx="6" fill="#142824"/>
+            <g transform="translate(62 118) rotate(-12)"><circle r="50" fill="#ff8a2b" stroke="#142824" stroke-width="4"/><text y="-2" text-anchor="middle" font-family="RC Poppins, sans-serif" font-weight="700" font-size="24" fill="#142824">works</text><text y="22" text-anchor="middle" font-family="RC Poppins, sans-serif" font-weight="600" font-size="15" fill="#142824">offline</text></g>
+            <g transform="translate(350 232) rotate(8)"><path d="M-62 -24h108a14 14 0 0 1 14 14v22a14 14 0 0 1 -14 14H-28l-22 20v-20h-12a14 14 0 0 1 -14 -14v-22a14 14 0 0 1 14 -14z" fill="#f7f2e6" stroke="#142824" stroke-width="4" stroke-linejoin="round"/><text x="-8" y="8" text-anchor="middle" font-family="RC Lora, serif" font-style="italic" font-weight="600" font-size="22" fill="#142824">Namaste!</text></g>
+            <g transform="translate(54 430) rotate(-8)"><path d="M0 -40 L11 -11 L42 0 L11 11 L0 40 L-11 11 L-42 0 L-11 -11Z" fill="#ffd36b" stroke="#142824" stroke-width="4" stroke-linejoin="round"/></g>
+            <g transform="translate(372 446) rotate(10)"><ellipse rx="46" ry="38" fill="#ff8a2b" stroke="#142824" stroke-width="4"/><path d="M-16 -34 Q-27 0 -16 34 M16 -34 Q27 0 16 34 M0 -38 V38" stroke="#142824" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M0 -38 q-2 -14 12 -19" stroke="#142824" stroke-width="6" fill="none" stroke-linecap="round"/></g>
+          </svg>
+        </div>
+      </div>
+      <svg class="hero-wave" viewBox="0 0 1440 70" preserveAspectRatio="none" aria-hidden="true"><path d="M0 40 C 240 92, 480 0, 720 38 S 1200 84, 1440 30 V70 H0Z" fill="#f7f2e6"/></svg>
+    </section>
+
+    <section class="block wrap" id="how" aria-labelledby="howTitle">
+      <p class="kicker">How it works</p>
+      <h2 id="howTitle">Drop. Fix. <em>Post.</em></h2>
+      <ol class="steps">
+        <li class="step"><svg viewBox="0 0 60 60" aria-hidden="true"><rect x="8" y="30" width="44" height="22" rx="7" fill="#ffd36b" stroke="#142824" stroke-width="3"/><path d="M30 38V8M20 18l10-10 10 10" fill="none" stroke="#142824" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <div class="num">01</div><h3>Drop it</h3><p>Any video or voice note. It is decoded on your own machine and never sent anywhere.</p></li>
+        <li class="step"><svg viewBox="0 0 60 60" aria-hidden="true"><path d="M12 48l4-14 26-26 10 10-26 26z" fill="#ff8a2b" stroke="#142824" stroke-width="3" stroke-linejoin="round"/><path d="M36 14l10 10" stroke="#142824" stroke-width="3"/></svg>
+          <div class="num">02</div><h3>Fix it</h3><p>Whisper listens, we write it in Roman Hinglish. Click any line to fix a word and the timing follows.</p></li>
+        <li class="step"><svg viewBox="0 0 60 60" aria-hidden="true"><rect x="8" y="10" width="44" height="40" rx="10" fill="#7cf3b0" stroke="#142824" stroke-width="3"/><path d="M25 22l16 8-16 8z" fill="#f7f2e6" stroke="#142824" stroke-width="3" stroke-linejoin="round"/></svg>
+          <div class="num">03</div><h3>Post it</h3><p>Pick a style, burn the captions in, or grab an .srt. Ready for Reels, Shorts and WhatsApp status.</p></li>
+      </ol>
+    </section>
+
+    <section class="block wrap" id="why" aria-labelledby="whyTitle">
+      <p class="kicker">Why open models</p>
+      <h2 id="whyTitle">Built for a side hustle, <em>not a subscription.</em></h2>
+      <div class="why">
+        <article><h3>Hinglish that looks right</h3><p>Devanagari scares off half your audience. We convert it word by word, keep English words as English, and let you teach it your own spellings.</p></article>
+        <article><h3>Your files stay put</h3><p>Transcription runs on your own CPU or GPU. Client footage, voice notes and drafts never touch a server you do not control.</p></article>
+        <article><h3>Models you can swap</h3><p>Tiny for quick drafts, large-v3-turbo for the final cut, or your own Hindi fine-tune. No per-minute pricing, ever.</p></article>
+      </div>
+    </section>
+
+    <section class="block wrap" id="recent" aria-labelledby="recentTitle" hidden>
+      <p class="kicker">Pick up where you left off</p>
+      <h2 id="recentTitle">Your <em>recent reels</em></h2>
+      <ul class="recent-list" id="recentList"></ul>
+    </section>
+  </div>
+
+  <section id="studio" class="studio wrap" hidden aria-live="polite">
+    <div class="studio-head">
+      <div class="left">
+        <button class="btn small" type="button" id="backBtn">← New video</button>
+        <h2 id="jobName"></h2>
+        <span class="tag" id="jobTag"></span>
+      </div>
+      <button class="btn small" type="button" id="deleteBtn">Delete project</button>
+    </div>
+
+    <div class="studio-grid">
+      <div class="stage-col">
+        <div class="stage" id="stage">
+          <div class="frame" id="frame">
+            <video id="player" playsinline controls preload="metadata"></video>
+            <div class="cap" id="cap" aria-hidden="true"></div>
+            <button class="fs" id="fsBtn" type="button" aria-label="Full screen preview">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#142824" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+            </button>
+          </div>
+        </div>
+        <p class="stage-hint" id="stageHint">The preview uses the same fonts and line breaks as the final render.</p>
+      </div>
+
+      <div class="side">
+        <div class="progress-card" id="progress">
+          <h3 id="progTitle">Getting started</h3>
+          <div class="bar" id="progBar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i></i></div>
+          <div class="progress-meta"><span id="progStage">Uploading</span><span id="progPct">0%</span></div>
+          <p class="notice error" id="progError" role="alert" hidden></p>
+          <div class="row-inline"><button class="btn small" type="button" id="cancelBtn">Cancel</button></div>
+        </div>
+
+        <aside class="panel" id="panel" hidden>
+          <div class="tabs" role="tablist" aria-label="Caption tools">
+            <button class="tab" type="button" role="tab" id="t-captions" aria-controls="tab-captions" aria-selected="true">Captions</button>
+            <button class="tab" type="button" role="tab" id="t-style" aria-controls="tab-style" aria-selected="false">Style</button>
+            <button class="tab" type="button" role="tab" id="t-export" aria-controls="tab-export" aria-selected="false">Export</button>
+          </div>
+
+          <div class="tabpanel" id="tab-captions" role="tabpanel" aria-labelledby="t-captions">
+            <p class="panel-note">Click a time to jump there. Edit a line and the timing follows. Changes save automatically.</p>
+            <div id="notes"></div>
+            <div class="rows" id="rows"></div>
+          </div>
+
+          <div class="tabpanel" id="tab-style" role="tabpanel" aria-labelledby="t-style" hidden>
+            <div class="group"><h4>Look</h4><div class="presets" id="presets"></div></div>
+            <div class="group">
+              <h4>Size and rhythm</h4>
+              <div class="range"><label for="fontSize">Text size</label><input type="range" id="fontSize" min="2.5" max="8" step="0.1"><output id="fontSizeOut"></output></div>
+              <div class="range"><label for="maxWords">Words per card</label><input type="range" id="maxWords" min="1" max="8" step="1"><output id="maxWordsOut"></output></div>
+              <div class="range"><label for="outline">Outline</label><input type="range" id="outline" min="0" max="0.35" step="0.01"><output id="outlineOut"></output></div>
+            </div>
+            <div class="group"><h4>Position</h4><div class="seg" id="segPosition"><button type="button" data-val="auto">Auto</button><button type="button" data-val="top">Top</button><button type="button" data-val="middle">Middle</button><button type="button" data-val="lower">Lower</button><button type="button" data-val="bottom">Bottom</button></div></div>
+            <div class="group"><h4>Letters</h4><div class="seg" id="segCase"><button type="button" data-val="natural">Natural</button><button type="button" data-val="upper">UPPER</button><button type="button" data-val="lower">lower</button></div></div>
+            <div class="group"><h4>Punctuation</h4><div class="seg" id="segPunct"><button type="button" data-val="keep">Keep</button><button type="button" data-val="light">Light</button><button type="button" data-val="none">None</button></div></div>
+            <div class="group"><h4>Lines per card</h4><div class="seg" id="segLines"><button type="button" data-val="1">1 line</button><button type="button" data-val="2">2 lines</button></div></div>
+            <div class="group toggles">
+              <label class="check"><input type="checkbox" id="tgHighlight"><span>Colour the word being spoken</span></label>
+              <label class="check"><input type="checkbox" id="tgPop"><span>Pop-in on every new card</span></label>
+              <label class="check"><input type="checkbox" id="tgBox"><span>Solid box behind the text</span></label>
+            </div>
+            <div class="group"><h4>Colours</h4>
+              <div class="swatches">
+                <label class="swatch">Text<input type="color" id="cText"></label>
+                <label class="swatch">Spoken word<input type="color" id="cHighlight"></label>
+                <label class="swatch">Outline / box<input type="color" id="cOutline"></label>
+              </div>
+              <div class="row-inline" style="margin-top:12px"><button class="btn small" type="button" id="saveBrand">Save as my brand look</button><span class="panel-note" id="brandNote" style="margin:0"></span></div>
+            </div>
+          </div>
+
+          <div class="tabpanel" id="tab-export" role="tabpanel" aria-labelledby="t-export" hidden>
+            <div class="export-card">
+              <h4>Burn captions into the video</h4>
+              <p class="panel-note" style="margin:0">Rendered on this machine with FFmpeg. Nothing is uploaded.</p>
+              <label class="field">Size
+                <select id="renderSize"><option value="0">Original size</option><option value="1080">Up to 1080p</option><option value="720">Up to 720p (faster)</option></select>
+              </label>
+              <button class="btn primary" type="button" id="renderBtn">Burn captions in</button>
+              <div class="bar" id="renderBar" hidden><i></i></div>
+              <p class="panel-note" id="renderMsg" style="margin:0" aria-live="polite"></p>
+              <a class="btn dark" id="renderDl" hidden>Download MP4</a>
+            </div>
+            <div class="export-card">
+              <h4>Caption files</h4>
+              <p class="panel-note" style="margin:0">For editors, YouTube, or any player. Same text and line breaks as the preview.</p>
+              <div class="dl-grid">
+                <button class="btn small" type="button" id="dlSrt">.srt</button>
+                <button class="btn small" type="button" id="dlVtt">.vtt</button>
+                <button class="btn small" type="button" id="dlAss">.ass (styled)</button>
+                <button class="btn small" type="button" id="dlTxt">Transcript .txt</button>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <ul class="openpieces" aria-label="Open pieces this app is built on">
+      <li>Whisper (open weights)</li><li>faster-whisper + CTranslate2</li><li>FFmpeg + libass</li><li>Poppins + Lora (OFL fonts)</li><li>Optional: Ollama + Gemma</li>
+    </ul>
+    <p><strong>Private by design.</strong> Files are processed and stored in the <code>data</code> folder next to this app. The only network call is the one-time model download. Delete a project and its files are removed.</p>
+  </div>
+</footer>
+
+<div class="toast" id="toast" role="status" hidden></div>
+<script type="module" src="/static/js/app.js"></script>
+</body>
+</html>
