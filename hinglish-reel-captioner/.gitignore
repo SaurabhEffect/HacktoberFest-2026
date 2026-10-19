@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+
+# Uploads, transcripts and rendered videos live here
+data/
+docs/DEV_POST.md
+docs/SUBMISSION_CHECKLIST.md
+
+
+# Editors and operating systems
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

@@ -1,0 +1,8 @@
+# What the app needs to run. Python 3.10 or newer, plus FFmpeg (installed separately, see README).
+# requirements-lock.txt lists the exact versions this was built and tested with.
+fastapi>=0.115
+uvicorn>=0.30
+python-multipart>=0.0.9
+pillow>=10.0
+numpy>=1.26
+faster-whisper>=1.1.0

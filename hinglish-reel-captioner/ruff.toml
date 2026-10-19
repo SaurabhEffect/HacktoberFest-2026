@@ -1,0 +1,15 @@
+# Optional linting:  pip install -r requirements-dev.txt  &&  ruff check .
+line-length = 120
+target-version = "py310"
+
+[lint]
+select = ["E", "F", "W", "B"]
+ignore = [
+    "B008",  # FastAPI declares parameters as defaults: file: UploadFile = File(...)
+    "B905",  # the zip() calls pair lists that are built to the same length; the tests check that they line up
+]
+
+[lint.per-file-ignores]
+"tests/*" = [
+    "E501",  # long assert lines read better than wrapped ones
+]
