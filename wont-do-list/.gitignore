@@ -1,0 +1,10 @@
+# Your own lists and settings never belong in a repository.
+data/
+
+__pycache__/
+*.pyc
+.ruff_cache/
+.venv/
+venv/
+*.zip
+.DS_Store

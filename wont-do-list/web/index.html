@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Won’t-Do List</title>
+  <meta name="description" content="An anti-to-do list. Paste what you meant to do; a small open-weight model on your own computer sorts it into do now, do later, let it expire and not my problem.">
+  <meta name="theme-color" content="#3d5f58">
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="app.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to the content</a>
+
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="brand" href="#/" aria-label="The Won’t-Do List, home">
+        <img src="img/favicon.svg" alt="" width="40" height="40">
+        <span class="brand-name">The Won’t-Do List</span>
+      </a>
+      <nav class="nav" aria-label="Main">
+        <a href="#/" data-nav="sort">Sort</a>
+        <a href="#/checkins" data-nav="checkins">Check-ins <span class="nav-badge" id="checkin-badge" hidden></span></a>
+        <a href="#/history" data-nav="history">History</a>
+        <a href="#/settings" data-nav="settings">Settings</a>
+      </nav>
+      <a class="model-chip" id="model-chip" href="#/settings" data-state="unknown">
+        <span class="dot" aria-hidden="true"></span>
+        <span id="model-chip-text">Looking for a model…</span>
+      </a>
+    </div>
+  </header>
+
+  <main id="main" tabindex="-1">
+    <noscript>
+      <div class="wrap"><p class="notice">The Won’t-Do List needs JavaScript. It all runs on your own computer; nothing is sent anywhere.</p></div>
+    </noscript>
+
+    <section class="view" id="view-sort" data-view="sort" aria-labelledby="sort-title">
+      <div class="hero">
+        <div class="wrap hero-inner">
+          <div class="hero-copy">
+            <p class="eyebrow">A small, local-first app</p>
+            <h1 id="sort-title" tabindex="-1">Do less, <em>on purpose.</em></h1>
+            <p class="lede">I made this to help me decide what needs attention, what can wait, and what I can let go. Paste in a task list and a small model running on your computer sorts it into four groups.</p>
+            <ul class="hero-points">
+              <li><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>Runs on your machine</li>
+              <li><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>Your list never leaves it</li>
+              <li><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>Safety net for money, health and promises</li>
+            </ul>
+          </div>
+          <div class="hero-art">
+            <img src="img/sloth.svg" alt="A sleepy lavender sloth hanging from a branch next to a paper list with most items crossed out." width="440" height="420">
+          </div>
+        </div>
+      </div>
+
+      <div class="wrap composer-wrap">
+        <div id="model-banner" class="banner" hidden></div>
+
+        <form id="composer" class="card composer" novalidate>
+          <div class="composer-head">
+            <label for="tasks" class="eyebrow eyebrow-dark">Paste your list</label>
+            <button type="button" id="sample-btn" class="btn btn-ghost btn-small">Try a sample list</button>
+          </div>
+          <textarea id="tasks" name="tasks" rows="11" spellcheck="false" autocomplete="off" aria-describedby="parse-note"
+            placeholder="One task per line. Bullets, numbers, checkboxes and headings are all fine.&#10;&#10;- Pay electricity bill by Friday&#10;- Learn Rust someday&#10;- Waiting for the landlord to fix the tap"></textarea>
+          <p id="parse-note" class="hint" aria-live="polite">Anything you have already ticked off is skipped.</p>
+
+          <div class="composer-row">
+            <div class="energy">
+              <label for="budget" class="energy-label">Energy for today <output id="budget-out" for="budget">90 min</output></label>
+              <input id="budget" name="budget" type="range" min="0" max="480" step="15" value="90">
+              <p class="hint">Do now fills up to this much; the rest slides to Do later. Anything important that is due within two days always stays.</p>
+            </div>
+            <div class="composer-actions">
+              <button type="submit" id="sort-btn" class="btn btn-primary btn-large">Sort my list</button>
+              <p class="hint kbd-hint">or press <kbd>Ctrl</kbd> + <kbd>Enter</kbd></p>
+            </div>
+          </div>
+
+          <div id="progress" class="progress" hidden>
+            <div class="progress-top">
+              <p id="progress-text" role="status">Starting…</p>
+              <button type="button" id="cancel-btn" class="btn btn-ghost btn-small">Cancel</button>
+            </div>
+            <progress id="progress-bar" max="100" value="0" aria-label="Sorting progress"></progress>
+            <p class="hint">A small model on a laptop thinks at its own pace. That is rather the point.</p>
+          </div>
+          <div id="sort-error" class="notice notice-error" role="alert" hidden></div>
+        </form>
+      </div>
+
+      <section class="wrap section how" aria-labelledby="how-title">
+        <p class="eyebrow">How it works</p>
+        <h2 id="how-title">Three steps, none of them hard.</h2>
+        <ol class="steps">
+          <li class="step">
+            <span class="step-num" aria-hidden="true">1</span>
+            <h3>Paste the whole mess</h3>
+            <p>Bullets, numbers, checkboxes and headings all work. Duplicates are merged and anything already ticked off is skipped.</p>
+          </li>
+          <li class="step">
+            <span class="step-num" aria-hidden="true">2</span>
+            <h3>A model on your machine judges</h3>
+            <p>For each task it first writes what realistically happens if you ignore it, then picks a bucket. Dates are worked out by code, never guessed.</p>
+          </li>
+          <li class="step">
+            <span class="step-num" aria-hidden="true">3</span>
+            <h3>A safety net catches the scary ones</h3>
+            <p>Money, paperwork, health, safety, promises and people can never silently expire. You always get the last word, and the model learns from your corrections.</p>
+          </li>
+        </ol>
+
+        <h3 class="buckets-title">The four buckets</h3>
+        <ul class="bucket-legend">
+          <li><img src="img/now.svg" alt="" width="64" height="64"><div><strong>Do now</strong><p>Ignoring it costs you soon, or it takes under ten minutes.</p></div></li>
+          <li><img src="img/later.svg" alt="" width="64" height="64"><div><strong>Do later</strong><p>It matters, but nothing breaks this week.</p></div></li>
+          <li><img src="img/expire.svg" alt="" width="64" height="64"><div><strong>Let it expire</strong><p>Nothing bad happens if it never gets done.</p></div></li>
+          <li><img src="img/notmine.svg" alt="" width="64" height="64"><div><strong>Not my problem</strong><p>It belongs to someone else, or you are waiting on them.</p></div></li>
+        </ul>
+      </section>
+
+      <section class="wrap section faq" aria-labelledby="faq-title">
+        <div class="faq-layout">
+        <div class="faq-intro">
+          <p class="eyebrow">Questions</p>
+          <h2 id="faq-title">Things you might be wondering.</h2>
+          <p>Still curious? The whole app is plain Python and plain JavaScript, small enough to read over a weekend.</p>
+        </div>
+        <div class="faq-list">
+          <details>
+            <summary>Does my list leave my computer?</summary>
+            <p>No. The app listens only on 127.0.0.1, talks only to the model server on your own machine and bundles its own fonts. There are no accounts, analytics or cloud calls. If you point it at a model server on another machine it asks you to confirm first.</p>
+          </details>
+          <details>
+            <summary>Which models work?</summary>
+            <p>Anything served through Ollama, llama.cpp’s <code>llama-server</code>, LM Studio or vLLM. A small model is plenty: Gemma 3 4B or Qwen 2.5 are good places to start (<code>ollama pull gemma3:4b</code>). Settings has a Test connection button that checks your setup in about ten seconds.</p>
+          </details>
+          <details>
+            <summary>What if the model gets it wrong?</summary>
+            <p>It will, sometimes. That is why money, paperwork, health, safety, promises and people can never be let go silently, why every card says why it landed where it did, and why every task has a Move button. Skipped tasks come back for a check-in (did it cost you anything?) and your regrets are fed back to the model as examples next time.</p>
+          </details>
+          <details>
+            <summary>What is the keyword demo?</summary>
+            <p>If no model is running you can still try the app. It sorts with a handful of keyword rules. That is not AI, and every list it makes says so.</p>
+          </details>
+          <details>
+            <summary>Where is my data kept?</summary>
+            <p>In plain JSON files in the <code>data</code> folder next to the app. Open them, back them up or delete them. Settings also has a Forget everything button.</p>
+          </details>
+          <details>
+            <summary>Why a list of things I will not do?</summary>
+            <p>Because every to-do list only ever grows. Deciding what not to do is the part nobody does on purpose, and it is where most of the time you get back comes from.</p>
+          </details>
+        </div>
+        </div>
+      </section>
+    </section>
+
+    <section class="view wrap" id="view-list" data-view="list" hidden>
+      <div id="list-root"></div>
+    </section>
+
+    <section class="view wrap" id="view-checkins" data-view="checkins" hidden>
+      <div id="checkins-root"></div>
+    </section>
+
+    <section class="view wrap" id="view-history" data-view="history" hidden>
+      <div id="history-root"></div>
+    </section>
+
+    <section class="view wrap" id="view-settings" data-view="settings" hidden>
+      <div id="settings-root"></div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+  <footer class="site-footer">
+    <div class="wrap footer-inner">
+      <div>
+        <p class="footer-brand">The Won’t-Do List</p>
+        <p>I built this app to make it easier to decide what I can let go.</p>
+      </div>
+      <div class="footer-fine">
+        <p>The sloth and bucket artwork are original. Atkinson Hyperlegible font licence notices are included in <code>web/fonts</code>.</p>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

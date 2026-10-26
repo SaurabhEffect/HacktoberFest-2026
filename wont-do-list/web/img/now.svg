@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="t">
+  <title id="t">Do now</title>
+  <circle cx="48" cy="48" r="44" fill="#fff"/>
+  <circle cx="48" cy="48" r="38" fill="#a0a0ff" stroke="#1c1c3f" stroke-width="4"/>
+  <g fill="none" stroke="#1c1c3f" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M54 22 L33 52 H47 L42 74 L63 43 H49 Z" fill="#fff"/>
+  </g>
+</svg>

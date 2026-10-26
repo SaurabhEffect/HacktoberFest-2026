@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 420" role="img" aria-labelledby="t d">
+  <title id="t">A sleepy sloth hanging from a branch</title>
+  <desc id="d">A lavender sloth hangs from a branch by two long arms, eyes half closed, next to a paper list with most items crossed out.</desc>
+  <defs>
+    <g id="sil">
+      <path d="M14 78 C120 44 320 44 426 78 L426 106 C320 72 120 72 14 106 Z"/>
+      <path d="M112 100 L150 100 L168 232 L124 238 Z"/>
+      <path d="M290 100 L328 100 L316 238 L272 232 Z"/>
+      <ellipse cx="220" cy="282" rx="96" ry="104"/>
+      <circle cx="220" cy="204" r="76"/>
+      <ellipse cx="160" cy="372" rx="34" ry="24"/>
+      <ellipse cx="280" cy="372" rx="34" ry="24"/>
+      <rect x="341" y="84" width="8" height="72"/>
+      <rect x="316" y="150" width="90" height="140" rx="10" transform="rotate(4 358 228)"/>
+    </g>
+  </defs>
+
+  <!-- sticker outline -->
+  <use href="#sil" fill="#fff" stroke="#fff" stroke-width="22" stroke-linejoin="round"/>
+
+  <!-- branch -->
+  <path d="M14 78 C120 44 320 44 426 78 L426 106 C320 72 120 72 14 106 Z" fill="#8a6a4f"/>
+  <path d="M40 88 C140 62 300 62 400 88" fill="none" stroke="#6e5139" stroke-width="4" stroke-linecap="round"/>
+  <!-- leaves -->
+  <path d="M60 84 C40 50 70 28 104 36 C100 64 86 80 60 84 Z" fill="#57a778"/>
+  <path d="M370 84 C392 52 366 30 334 36 C336 62 350 78 370 84 Z" fill="#6cc08b"/>
+  <path d="M60 84 C72 66 86 52 104 36" fill="none" stroke="#3d5f58" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- paper list on a string -->
+  <path d="M345 84 L345 150" stroke="#3d5f58" stroke-width="4" stroke-linecap="round"/>
+  <g transform="rotate(4 358 228)">
+    <rect x="316" y="150" width="90" height="140" rx="10" fill="#fffdf4"/>
+    <rect x="316" y="150" width="90" height="140" rx="10" fill="none" stroke="#1c1c3f" stroke-width="4"/>
+    <circle cx="361" cy="152" r="7" fill="#a0a0ff" stroke="#1c1c3f" stroke-width="3"/>
+    <g stroke="#1c1c3f" stroke-width="5" stroke-linecap="round">
+      <path d="M332 188 L388 188" opacity=".55"/>
+      <path d="M332 214 L388 214" opacity=".55"/>
+      <path d="M332 240 L376 240"/>
+      <path d="M332 266 L388 266" opacity=".55"/>
+    </g>
+    <path d="M326 184 L394 194" stroke="#c401c4" stroke-width="5" stroke-linecap="round" opacity=".0"/>
+    <path d="M324 213 L398 213" stroke="#5a5ab5" stroke-width="4" stroke-linecap="round"/>
+    <path d="M324 265 L398 265" stroke="#5a5ab5" stroke-width="4" stroke-linecap="round"/>
+    <path d="M324 187 L398 187" stroke="#5a5ab5" stroke-width="4" stroke-linecap="round"/>
+    <path d="M372 236 l7 8 l14 -17" fill="none" stroke="#2f8f5b" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- arms -->
+  <path d="M112 100 L150 100 L168 232 L124 238 Z" fill="#a0a0ff"/>
+  <path d="M290 100 L328 100 L316 238 L272 232 Z" fill="#a0a0ff"/>
+  <g fill="#403f7d">
+    <path d="M118 96 q-4 -16 8 -22 q8 12 6 24 z"/>
+    <path d="M132 98 q-1 -18 12 -22 q6 12 2 24 z"/>
+    <path d="M296 98 q4 -18 -9 -22 q-8 12 -3 24 z"/>
+    <path d="M311 96 q1 -16 12 -20 q6 12 1 22 z"/>
+  </g>
+
+  <!-- legs -->
+  <ellipse cx="160" cy="372" rx="34" ry="24" fill="#a0a0ff"/>
+  <ellipse cx="280" cy="372" rx="34" ry="24" fill="#a0a0ff"/>
+  <g fill="none" stroke="#403f7d" stroke-width="5" stroke-linecap="round">
+    <path d="M142 386 q4 8 10 10"/><path d="M158 390 q2 8 8 12"/><path d="M174 386 q0 8 4 12"/>
+    <path d="M262 386 q4 8 10 10"/><path d="M278 390 q2 8 8 12"/><path d="M294 386 q0 8 4 12"/>
+  </g>
+
+  <!-- body -->
+  <ellipse cx="220" cy="282" rx="96" ry="104" fill="#a0a0ff"/>
+  <ellipse cx="220" cy="300" rx="62" ry="72" fill="#c2c2ff"/>
+  <g stroke="#a0a0ff" stroke-width="5" stroke-linecap="round" opacity=".9">
+    <path d="M196 270 q24 12 48 0"/><path d="M190 296 q30 14 60 0"/><path d="M196 322 q24 12 48 0"/>
+  </g>
+
+  <!-- head -->
+  <circle cx="220" cy="204" r="76" fill="#a0a0ff"/>
+  <path d="M158 196 C158 156 190 142 220 142 C250 142 282 156 282 196 C282 236 252 262 220 262 C188 262 158 236 158 196 Z" fill="#f2f4f7"/>
+  <!-- eye stripes -->
+  <path d="M168 190 C176 176 194 176 204 192 C196 214 176 218 166 206 Z" fill="#403f7d"/>
+  <path d="M272 190 C264 176 246 176 236 192 C244 214 264 218 274 206 Z" fill="#403f7d"/>
+  <!-- sleepy eyes -->
+  <path d="M176 194 q12 10 24 0" fill="none" stroke="#f2f4f7" stroke-width="5" stroke-linecap="round"/>
+  <path d="M244 194 q12 10 24 0" fill="none" stroke="#f2f4f7" stroke-width="5" stroke-linecap="round"/>
+  <!-- nose and smile -->
+  <ellipse cx="220" cy="220" rx="11" ry="8" fill="#1c1c3f"/>
+  <path d="M202 238 q18 14 36 0" fill="none" stroke="#1c1c3f" stroke-width="5" stroke-linecap="round"/>
+  <ellipse cx="178" cy="226" rx="11" ry="7" fill="#ffb3dc" opacity=".8"/>
+  <ellipse cx="262" cy="226" rx="11" ry="7" fill="#ffb3dc" opacity=".8"/>
+  <!-- zzz -->
+  <g fill="none" stroke="#eef5f1" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M62 190 h18 l-18 20 h18"/>
+    <path d="M38 156 h12 l-12 14 h12"/>
+  </g>
+</svg>
