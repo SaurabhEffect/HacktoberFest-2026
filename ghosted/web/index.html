@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#3d5f58">
+  <title>Ghosted · answer the issues nobody answered</title>
+  <meta name="description" content="Find the GitHub issues that never got a single reply, check whether they were quietly fixed, and draft the answer the reporter should have received. A local model, a review queue, nothing posted.">
+  <link rel="icon" href="/ghost.svg" type="image/svg+xml">
+  <link rel="preload" href="/fonts/instrument-serif-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/dm-sans-var.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+    <defs>
+      <symbol id="ghost" viewBox="0 0 64 64">
+        <path d="M10 34C10 17 19 6 32 6s22 11 22 28v26c0 4-4 5-6 2l-4-5c-2-2-4-2-6 0l-4 5c-1 1-3 1-4 0l-4-5c-2-2-4-2-6 0l-4 5c-2 3-6 2-6-2Z" fill="#fbf8ef"/>
+        <ellipse cx="24" cy="32" rx="3.4" ry="4.6" fill="#17302a"/>
+        <ellipse cx="40" cy="32" rx="3.4" ry="4.6" fill="#17302a"/>
+        <ellipse cx="32" cy="43" rx="3" ry="4" fill="#17302a"/>
+        <ellipse cx="17.5" cy="40" rx="3.4" ry="2.2" fill="#f5a30b" opacity=".5"/>
+        <ellipse cx="46.5" cy="40" rx="3.4" ry="2.2" fill="#f5a30b" opacity=".5"/>
+      </symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4.5v9M12 19.2v.01" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round"/></symbol>
+      <symbol id="i-question" viewBox="0 0 24 24"><path d="M8.6 9.2a3.5 3.5 0 1 1 5.2 3c-1.2.7-1.8 1.4-1.8 2.7M12 19.4v.01" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M5 15V6.5A2.5 2.5 0 0 1 7.5 4H15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+      <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.5-5.8M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11M7 11l5 5 5-5M5 20h14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-external" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6" fill="none" stroke="currentColor" stroke-width="3"/><path d="M15.2 15.2L20 20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></symbol>
+      <symbol id="i-pen" viewBox="0 0 24 24"><path d="M4.5 19.5l1-4L16 5a2.1 2.1 0 0 1 3 3L8.5 18.5l-4 1ZM14 7l3 3" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    </defs>
+  </svg>
+
+  <div id="offline" class="offline" role="alert" hidden>Lost contact with Ghosted. Is the terminal window that started it still running?</div>
+
+  <header class="nav">
+    <div class="wrap">
+      <a class="brand" href="#/" id="brand"><img src="/ghost.svg" alt="" width="36" height="36"><span>Ghosted</span></a>
+      <nav class="nav-links" aria-label="Sections">
+        <a href="#how">How it works</a>
+        <a href="#verdicts">Verdicts</a>
+        <a href="#why">Why local</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+      <a class="btn btn-ink btn-sm" href="#/" id="nav-cta">New search</a>
+    </div>
+  </header>
+
+  <main id="main">
+    <noscript>
+      <p class="wrap" style="padding:80px 0">Ghosted's review queue needs JavaScript. It is a local page: nothing is sent anywhere except GitHub (read-only) and your own model.</p>
+    </noscript>
+
+    <!-- ===================== HOME ===================== -->
+    <div id="view-home">
+      <section class="hero">
+        <div class="bunting" aria-hidden="true"></div>
+        <div class="wrap hero-grid">
+          <div class="hero-copy">
+            <p class="eyebrow">A review queue for forgotten issues</p>
+            <h1>Somebody asked. Nobody <em>answered.</em></h1>
+            <p class="lede">Point Ghosted at an abandoned GitHub repository. It finds the issues that never got a single reply, checks whether they were quietly fixed, and drafts the answer the reporter should have received, with a model running on <strong>your own machine</strong>. Nothing is ever posted.</p>
+
+            <form id="scan-form" novalidate autocomplete="off">
+              <div class="finder">
+                <label class="sr-only" for="repo">GitHub repository</label>
+                <input id="repo" name="repo" type="text" inputmode="url" placeholder="owner/name or GitHub link" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="200">
+                <button id="go" class="btn btn-marigold" type="submit"><span>Find the ghosts</span><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-arrow"/></svg></button>
+              </div>
+
+              <div class="finder-meta">
+                <button id="try-demo" class="linkish" type="button">or haunt a demo graveyard</button>
+                <span id="engine-chip" class="chip wait" role="status"><span class="dot wait"></span><span id="engine-chip-text">Looking for a local model…</span></span>
+                <button id="toggle-settings" class="linkish" type="button" aria-expanded="false" aria-controls="settings">Settings</button>
+              </div>
+
+              <p id="engine-help" class="engine-help" hidden></p>
+              <div id="form-error" class="form-error" role="alert" hidden></div>
+
+              <div id="settings" class="settings" hidden>
+                <fieldset class="full">
+                  <legend>Engine</legend>
+                  <div class="seg">
+                    <label><input type="radio" name="backend" value="ollama" checked><span>Local model (Ollama)</span></label>
+                    <label><input type="radio" name="backend" value="openai"><span>OpenAI-compatible server</span></label>
+                    <label><input type="radio" name="backend" value="rules"><span>Rule-based preview (no model)</span></label>
+                  </div>
+                </fieldset>
+
+                <div class="full" id="field-url">
+                  <label for="base-url">Model server address</label>
+                  <input id="base-url" type="text" inputmode="url" placeholder="http://localhost:11434" spellcheck="false" autocapitalize="off" maxlength="200">
+                  <p class="hint" id="url-hint">Ollama listens on http://localhost:11434 by default.</p>
+                </div>
+
+                <div class="full" id="field-model">
+                  <label for="model">Model</label>
+                  <div class="row">
+                    <input id="model" type="text" list="model-list" placeholder="gemma3:4b" spellcheck="false" autocapitalize="off" maxlength="120">
+                    <button id="refresh-models" class="btn btn-line btn-sm" type="button">Refresh list</button>
+                  </div>
+                  <datalist id="model-list"></datalist>
+                  <p class="hint" id="model-hint">Any small instruction-tuned model works. Gemma is a good start: <code>ollama pull gemma3:4b</code></p>
+                </div>
+
+                <div>
+                  <label for="max-issues">How many issues</label>
+                  <input id="max-issues" type="number" min="1" max="200" step="1" value="20" inputmode="numeric">
+                  <p class="hint">Each one is a model call. Start small.</p>
+                </div>
+                <div>
+                  <label for="min-age">Silent for at least (days)</label>
+                  <input id="min-age" type="number" min="0" max="20000" step="1" value="30" inputmode="numeric">
+                  <p class="hint">Younger issues aren't ghosts yet.</p>
+                </div>
+                <div>
+                  <label for="order">Start with</label>
+                  <select id="order">
+                    <option value="oldest">The oldest issues</option>
+                    <option value="newest">The newest issues</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="token">GitHub token (optional)</label>
+                  <input id="token" type="password" autocomplete="off" spellcheck="false" placeholder="ghp_…" maxlength="255">
+                  <p class="hint" id="token-hint">Raises GitHub's limit from 60 to 5,000 requests an hour. Read-only is plenty. Used for this scan only, never saved.</p>
+                </div>
+              </div>
+            </form>
+
+            <div id="history" class="history" hidden>
+              <h2>Earlier hauntings</h2>
+              <ul id="history-list"></ul>
+            </div>
+          </div>
+
+          <div class="hero-art" aria-hidden="true">
+            <svg class="ghost-hero" viewBox="0 0 24 24"><use href="#ghost"/></svg>
+            <span class="sticker xl st-fixed s1"><svg class="ico" viewBox="0 0 24 24"><use href="#i-check"/></svg></span>
+            <span class="sticker xl st-valid s2"><svg class="ico" viewBox="0 0 24 24"><use href="#i-alert"/></svg></span>
+            <span class="sticker xl st-needs_info s3"><svg class="ico" viewBox="0 0 24 24"><use href="#i-question"/></svg></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="section wrap" id="how">
+        <div class="section-head">
+          <p class="eyebrow">How it works</p>
+          <h2 class="h2">Three steps from <em>silence</em> to a reply you can send.</h2>
+        </div>
+        <ol class="steps">
+          <li class="step">
+            <span class="sticker st-needs_info" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24"><use href="#ghost"/></svg></span>
+            <span class="num" aria-hidden="true">1</span>
+            <h3>Find the silent ones</h3>
+            <p>Ghosted lists a repository's open issues and keeps the ones with zero comments that have waited longest. Pull requests and anything that got a reply are skipped.</p>
+          </li>
+          <li class="step">
+            <span class="sticker st-valid" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24"><use href="#i-search"/></svg></span>
+            <span class="num" aria-hidden="true">2</span>
+            <h3>Dig for the fix</h3>
+            <p>It searches merged pull requests, commits and release notes for each issue. “Fixes #12” is strong evidence. A lookalike title is only a hint, and it says so.</p>
+          </li>
+          <li class="step">
+            <span class="sticker st-fixed" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24"><use href="#i-pen"/></svg></span>
+            <span class="num" aria-hidden="true">3</span>
+            <h3>Draft the reply</h3>
+            <p>A local model sorts each issue and writes the kind, specific answer the reporter should have received. You edit it, approve it and export a review sheet. Posting is your call.</p>
+          </li>
+        </ol>
+      </section>
+
+      <section class="band" id="verdicts">
+        <div class="wrap">
+          <div class="section-head">
+            <p class="eyebrow">The three verdicts</p>
+            <h2 class="h2">Every ghost gets <em>one</em> sticker.</h2>
+          </div>
+          <div class="verdicts">
+            <article class="verdict">
+              <span class="sticker xl st-fixed" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24"><use href="#i-check"/></svg></span>
+              <h3>Already fixed</h3>
+              <p>Something merged after the report says it fixes it. The draft points at that evidence and asks the reporter to confirm.</p>
+            </article>
+            <article class="verdict">
+              <span class="sticker xl st-valid" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24"><use href="#i-alert"/></svg></span>
+              <h3>Still valid</h3>
+              <p>A clear report and nothing since addresses it. The draft apologizes for the silence, confirms what was understood and invites a maintainer in.</p>
+            </article>
+            <article class="verdict">
+              <span class="sticker xl st-needs_info" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24"><use href="#i-question"/></svg></span>
+              <h3>Needs info</h3>
+              <p>Too thin to act on. The draft asks for exactly what is missing: the version, the steps, what was expected and what happened.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section wrap" id="why">
+        <div class="why">
+          <div>
+            <p class="eyebrow">Why local</p>
+            <h2 class="h2">A sweep is thousands of calls. It should cost <em>nothing.</em></h2>
+            <p class="lede">Ghosted runs on open weights, through Ollama or any OpenAI-compatible server on your machine. Once the model is on your disk, classifying a whole graveyard is free.</p>
+          </div>
+          <ol class="why-list">
+            <li><span class="n">01</span><strong>It is thousands of calls.</strong><p>A big repository holds years of silent issues. At one model call each, a hosted API turns that into a bill. On your own machine it turns into electricity.</p></li>
+            <li><span class="n">02</span><strong>Reporters are strangers.</strong><p>Issue text is untrusted input. Ghosted fences it off as data, and nothing a model writes can add a link, version or issue number that is not in the repository's own history.</p></li>
+            <li><span class="n">03</span><strong>You can read all of it.</strong><p>Open weights, a Python app with zero dependencies and no telemetry. The only traffic is read-only requests to GitHub and to the model on your machine.</p></li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="section wrap" id="faq">
+        <div class="section-head">
+          <p class="eyebrow">Questions</p>
+          <h2 class="h2">Before you <em>point it</em> at anything.</h2>
+        </div>
+        <div class="faq">
+          <details>
+            <summary>Does Ghosted ever post to GitHub?</summary>
+            <p>No. It sends read-only GET requests to GitHub's API and has no code that writes. Drafts live in this page and in a local SQLite file. You copy the ones you want and post them yourself.</p>
+          </details>
+          <details>
+            <summary>Which model do I need?</summary>
+            <p>Any small instruction-tuned model. With Ollama, Gemma is listed first: <code>ollama pull gemma3:4b</code> is a fine start. LM Studio, llama.cpp's server and vLLM work through the OpenAI-compatible option. With no model at all, the rule-based preview runs the same evidence checks and fills in templates, so you can see the whole flow.</p>
+          </details>
+          <details>
+            <summary>How does it decide something is fixed?</summary>
+            <p>Only from evidence. A merged pull request or commit that says it fixes or closes the issue is strong evidence. A plain mention is weaker, and a similar title is only a hint that caps the confidence at low. If a model says “fixed” with nothing behind it, Ghosted downgrades the verdict to needs info.</p>
+          </details>
+          <details>
+            <summary>What about GitHub's rate limit?</summary>
+            <p>Without a token GitHub allows 60 requests an hour. A scan uses at most about 22 of them, so a few scans an hour are fine. A read-only token (typed in Settings, or set as <code>GITHUB_TOKEN</code>) raises that to 5,000. A token you type is kept in memory for that scan and never saved.</p>
+          </details>
+          <details>
+            <summary>Where does my data live?</summary>
+            <p>In a SQLite file at <code>data/ghosted.db</code> next to the app. Delete a scan under “Earlier hauntings” and its drafts are gone. There is no analytics, and even the fonts are bundled.</p>
+          </details>
+        </div>
+      </section>
+    </div>
+
+    <!-- ===================== SCAN ===================== -->
+    <div id="view-scan" hidden>
+      <section class="scan-hero">
+        <div class="bunting" aria-hidden="true"></div>
+        <div class="wrap">
+          <a class="back" href="#/">&larr; New search</a>
+          <p class="eyebrow" id="scan-eyebrow">Review queue</p>
+          <h1 class="scan-title" id="scan-title">Loading…</h1>
+          <p class="scan-desc" id="scan-desc" hidden></p>
+          <div class="chips" id="scan-chips"></div>
+        </div>
+      </section>
+
+      <div class="wrap stack">
+        <section id="progress" class="card-panel progress-card" hidden>
+          <h2 id="progress-title">Warming up</h2>
+          <p class="msg" id="progress-msg"></p>
+          <div class="track" id="track" role="progressbar" aria-label="Scan progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div class="fill" id="fill"><svg class="ghost-rider" viewBox="0 0 24 24" aria-hidden="true"><use href="#ghost"/></svg></div>
+          </div>
+          <ol class="stages" id="stages"></ol>
+          <div class="progress-foot">
+            <span id="progress-count" class="muted"></span>
+            <button id="cancel" class="btn btn-line btn-sm" type="button">Stop</button>
+          </div>
+        </section>
+
+        <div id="alert" hidden></div>
+        <div id="notes" class="notes"></div>
+        <div id="summary" class="summary" hidden></div>
+
+        <div id="results" hidden>
+          <div class="toolbar" id="toolbar">
+            <div class="filters" role="group" aria-label="Filter the drafts">
+              <button class="filter" type="button" data-filter="all" aria-pressed="true">All <b>0</b></button>
+              <button class="filter" type="button" data-filter="fixed" aria-pressed="false">Already fixed <b>0</b></button>
+              <button class="filter" type="button" data-filter="valid" aria-pressed="false">Still valid <b>0</b></button>
+              <button class="filter" type="button" data-filter="needs_info" aria-pressed="false">Needs info <b>0</b></button>
+              <button class="filter" type="button" data-filter="approved" aria-pressed="false">Approved <b>0</b></button>
+            </div>
+            <label><input type="checkbox" id="hide-skipped"> Hide skipped</label>
+          </div>
+          <div class="exports">
+            <p class="muted promise" id="promise">Nothing is posted to GitHub, ever. Edit a draft, approve the ones you would really send, export the sheet, and paste them in yourself.</p>
+            <div class="tools">
+              <label><input type="checkbox" id="only-approved"> Approved only</label>
+              <span class="dl">
+                <a class="btn btn-line btn-sm" id="dl-md" href="#/" download><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-download"/></svg>Markdown</a>
+                <a class="btn btn-line btn-sm" id="dl-csv" href="#/" download>CSV</a>
+                <a class="btn btn-line btn-sm" id="dl-json" href="#/" download>JSON</a>
+              </span>
+            </div>
+          </div>
+          <ol id="queue" class="queue"></ol>
+          <div id="filter-empty" class="card-panel empty" hidden>
+            <h2>Nothing in this filter.</h2>
+            <p>Pick another sticker above, or switch off “Hide skipped”.</p>
+          </div>
+        </div>
+
+        <section id="empty" class="card-panel empty" hidden>
+          <svg class="ghost" viewBox="0 0 24 24" aria-hidden="true"><use href="#ghost"/></svg>
+          <h2>No ghosts here.</h2>
+          <p id="empty-text"></p>
+          <p><a class="btn btn-ink" href="#/">Try another repository</a></p>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <strong>Ghosted</strong>
+      <p>A prototype made for the DEV × Hacktoberfest 2026 open-source AI challenge, week four: Ghost in the Machine. It reads GitHub. It never writes to it.</p>
+    </div>
+  </footer>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="/app.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Local Ghosted data
+/ghosted/data/
+/ghosted/*.db
+/ghosted/*.db-shm
+/ghosted/*.db-wal
+/ghosted/PLAN.md
+
+
+# Operating systems and editors
+.DS_Store
+Thumbs.db
+.vscode/
